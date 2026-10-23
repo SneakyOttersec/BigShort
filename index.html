@@ -225,7 +225,7 @@
       <summary>Barèmes bancaires appliqués</summary>
       <p><strong>BoursoBank Découverte</strong> — CTO&nbsp;: 1,99&nbsp;€ jusqu’à 500&nbsp;€, puis 0,60&nbsp;% par ordre; PEA plafonné à 0,50&nbsp;% par ordre; achat minimum modélisé à 20&nbsp;€ en CTO et 100&nbsp;€ en PEA; droits de garde et inactivité 0&nbsp;€. PER Matla&nbsp;: frais d’entrée, versement, arbitrage et sortie en capital 0&nbsp;€, gestion 0,50&nbsp;%/an.</p>
       <p><strong>Fortuneo Starter</strong> — premier achat mensuel jusqu’à 500&nbsp;€ gratuit, sinon 0,35&nbsp;%; achat minimum PEA de 400&nbsp;€; garde et tenue de compte 0&nbsp;€. PER&nbsp;: entrée, versement, arbitrage et rachat 0&nbsp;€, gestion 0,50&nbsp;%/an, transaction ETF 0,10&nbsp;% à l’achat et à la vente, transfert sortant avant 5 ans jusqu’à 1&nbsp;%.</p>
-      <p><strong>Crédit Agricole Île-de-France Offre Bourse Intégral</strong> — droits de garde exonérés; service gratuit à partir de 12 ordres/an, sinon 96&nbsp;€; PEA&nbsp;: 0,48&nbsp;% jusqu’à 500&nbsp;€, 0,18&nbsp;% jusqu’à 1&nbsp;000&nbsp;€, puis 0,12&nbsp;%; CTO/PER&nbsp;: 0,99&nbsp;€ jusqu’à 1&nbsp;000&nbsp;€, puis 0,12&nbsp;%. Les éventuels frais de marché ne sont pas publiés à l’avance.</p>
+      <p><strong>Crédit Agricole Île-de-France Offre Bourse Intégral — PEA uniquement</strong> — droits de garde exonérés; service gratuit à partir de 12 ordres/an, sinon 96&nbsp;€; courtage&nbsp;: 0,48&nbsp;% jusqu’à 500&nbsp;€, 0,18&nbsp;% jusqu’à 1&nbsp;000&nbsp;€, puis 0,12&nbsp;%. Les éventuels frais de marché ne sont pas publiés à l’avance.</p>
       <p><strong>Linxea Spirit PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF 0,10&nbsp;% chacun; versement, arbitrage et sortie en capital 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
       <p><strong>Lucya Cardif PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF jusqu’à 0,10&nbsp;% chacun; versement et arbitrage 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
     </details>
@@ -276,7 +276,7 @@
       const BANKS = Object.freeze({
         bourso: { name: 'BoursoBank', plan: 'Découverte', min: { PER: 50, PEA: 100, CTO: 20 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
         fortuneo: { name: 'Fortuneo', plan: 'Starter', min: { PER: 50, PEA: 400, CTO: 0 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
-        ca: { name: 'Crédit Agricole IDF', plan: 'Offre Bourse Intégral', min: { PER: 0, PEA: 0, CTO: 0 }, wrapper: { PER: 0, PEA: 0, CTO: 0 } },
+        ca: { name: 'Crédit Agricole IDF', plan: 'Offre Bourse Intégral', min: { PEA: 0 }, wrapper: { PEA: 0 } },
         linxea: { name: 'Linxea', plan: 'Spirit PER', min: { PER: 50 }, wrapper: { PER: .005 } },
         lucya: { name: 'Lucya', plan: 'Cardif PER', min: { PER: 50 }, wrapper: { PER: .005 } }
       });
@@ -286,16 +286,15 @@
         'PEA-ca': { name: 'Amundi PEA Monde (MSCI World) Acc', short: 'Amundi PEA Monde', isin: 'FR001400U5Q4', fee: .002, kind: 'ETF MSCI World', status: 'Moins cher vérifié, disponibilité à confirmer', verified: false, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/FR001400U5Q4/FRA/FRA/RETAIL/ETF' },
         'CTO-bourso': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
         'CTO-fortuneo': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
-        'CTO-ca': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher vérifié, disponibilité à confirmer', verified: false, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
         'PER-bourso': { name: 'Bourso Invest – Bourso Monde', short: 'Bourso Monde', isin: 'FR001400RWK6', fee: .0059, kind: 'Fonds nourricier d’ETF', status: 'Support Monde GL le moins chargé repéré', verified: true, source: 'https://www.oradeavie.fr/fileadmin/user_upload/oradeavie/documents_de_performance/1636-MATLA-PERFORMANCE-202603.pdf' },
         'PER-fortuneo': { name: 'Amundi MSCI World Swap II UCITS ETF Dist', short: 'Amundi World II', isin: 'FR0010315770', fee: .003, kind: 'ETF MSCI World', status: 'Moins cher du catalogue PER public vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/kid-priips/FR0010315770/FRA/FRA' },
-        'PER-ca': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher vérifié, disponibilité à confirmer', verified: false, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
         'PER-linxea': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher du catalogue officiel vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
         'PER-lucya': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher du catalogue officiel vérifié', verified: true, source: 'https://app.lucya.com/asv/nos-fonds/opcvm/IE000BI8OT95/0P0001S8XB' }
       });
       const PRODUCTS = ['PER', 'PEA', 'CTO'];
       const VARIANTS = Object.freeze([
-        ...['bourso', 'fortuneo', 'ca'].flatMap(bankKey => PRODUCTS.map(product => ({ bankKey, product }))),
+        ...['bourso', 'fortuneo'].flatMap(bankKey => PRODUCTS.map(product => ({ bankKey, product }))),
+        { bankKey: 'ca', product: 'PEA' },
         { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }
       ]);
       const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {} };
