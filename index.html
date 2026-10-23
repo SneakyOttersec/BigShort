@@ -105,6 +105,25 @@
     .bar[data-product="PEA"] { background: var(--blue); }
     .bar[data-product="CTO"] { background: var(--gold); }
     .bar-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; }
+    .selection { margin: 14px 0; padding: 20px; }
+    .selection-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+    .selection-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .selection-actions button { border: 0; padding: 5px 0; background: transparent; color: var(--brand-dark); }
+    .selection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .selection fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    .selection legend { padding: 0; margin-bottom: 4px; font-weight: 650; }
+    .selection .check-option { margin: 0; min-height: 40px; }
+    .selection legend .check-option { font-size: 1rem; }
+    .line-swatch { width: 28px; height: 10px; flex-shrink: 0; }
+    .history-description, .empty-message { color: var(--muted); font-size: .875rem; }
+    .history-plot { width: 100%; height: 320px; }
+    .history-plot svg { display: block; width: 100%; height: 100%; }
+    .history-inspector { margin-top: 14px; }
+    .history-inspector label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--text); }
+    .history-inspector input { padding: 0; accent-color: var(--brand); }
+    .history-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 18px; margin: 10px 0 0; }
+    .history-value { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: .82rem; }
+    .history-value strong { margin-left: auto; font-variant-numeric: tabular-nums; }
 
     .table-wrap { overflow-x: auto; }
     table { width: 100%; min-width: 1340px; border-collapse: collapse; }
@@ -144,6 +163,7 @@
       .summary-grid { grid-template-columns: 1fr 1fr; }
       .best { grid-column: 1 / -1; }
       .detail-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .history-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 560px) {
       .shell { width: min(100% - 18px, 1180px); padding-top: 18px; }
@@ -152,6 +172,9 @@
       .bar-row { grid-template-columns: 1fr 88px; gap: 5px 8px; }
       .track { grid-column: 1 / -1; grid-row: 2; }
       .bar-value { grid-column: 2; grid-row: 1; }
+      .selection { padding: 15px; }
+      .selection-grid, .history-values { grid-template-columns: 1fr; }
+      .selection .check-option { min-height: 44px; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
@@ -214,6 +237,15 @@
       <div id="horizon" class="horizon"></div>
     </div>
 
+    <section class="selection card" aria-labelledby="selection-title">
+      <div class="selection-head">
+        <h2 id="selection-title">Offres à afficher</h2>
+        <div class="selection-actions"><button type="button" data-offer-selection="all">Tout sélectionner</button><button type="button" data-offer-selection="none">Tout masquer</button></div>
+      </div>
+      <div id="offer-filters" class="selection-grid"></div>
+      <p id="selection-count" class="summary-meta" aria-live="polite"></p>
+    </section>
+
     <section class="summary-grid" aria-live="polite">
       <article class="summary-card card best">
         <p class="summary-label">Meilleur capital net</p>
@@ -243,8 +275,21 @@
       <p><strong>Lucya Cardif PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF jusqu’à 0,10&nbsp;% chacun; versement et arbitrage 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
     </details>
 
+    <section class="chart-section card" aria-labelledby="history-title">
+      <h2 id="history-title">Évolution du capital net année par année</h2>
+      <p class="history-description">Capital net théorique si vous sortiez à chaque date, après frais et fiscalité, avec la TMI de sortie retenue pour le PER. Sa disponibilité avant la retraite reste soumise aux conditions de déblocage.</p>
+      <p id="history-empty" class="empty-message" hidden></p>
+      <div id="history-plot" class="history-plot"></div>
+      <div id="history-inspector" class="history-inspector">
+        <label for="history-year"><span>Année à consulter</span><strong id="history-date"></strong></label>
+        <input id="history-year" type="range" min="0" max="1" step="1" value="1">
+        <div id="history-values" class="history-values" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section class="chart-section card" aria-labelledby="chart-title">
       <h2 id="chart-title">Capital net à la sortie</h2>
+      <p id="comparison-empty" class="empty-message" hidden></p>
       <div id="chart" class="chart" aria-label="Graphique comparatif des solutions étudiées"></div>
     </section>
 
@@ -267,7 +312,7 @@
       </div>
     </section>
 
-    <section class="detail card" aria-labelledby="detail-title" aria-live="polite">
+    <section id="detail-panel" class="detail card" aria-labelledby="detail-title" aria-live="polite">
       <div class="detail-head"><h2 id="detail-title">Décomposition</h2><span id="detail-subtitle" class="horizon"></span></div>
       <p id="detail-fund" class="fund-line"></p>
       <div id="detail-grid" class="detail-grid"></div>
@@ -310,11 +355,93 @@
         { bankKey: 'ca', product: 'PEA' },
         { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }
       ]);
-      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {} };
+      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null };
       const $ = id => document.getElementById(id);
       const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
       const fmtExact = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtPct = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      const fmtAxis = new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
+      const seriesColors = { PER: '#106b50', PEA: '#2865b0', CTO: '#a66a0a' };
+      const bankDashes = { bourso: '', fortuneo: '8 4', ca: '2 4', linxea: '12 3 2 3', lucya: '3 3 10 3' };
+
+      function seriesSwatch(product, bankKey) {
+        return `<svg class="line-swatch" viewBox="0 0 28 10" aria-hidden="true"><line x1="0" y1="5" x2="28" y2="5" stroke="${seriesColors[product]}" stroke-width="2.5" stroke-dasharray="${bankDashes[bankKey]}" /></svg>`;
+      }
+
+      function initOfferFilters() {
+        $('offer-filters').innerHTML = PRODUCTS.map(product => `<fieldset><legend><label class="check-option"><input type="checkbox" data-product-filter="${product}" checked><span>${product}</span></label></legend>${VARIANTS.filter(v => v.product === product).map(v => `<label class="check-option"><input type="checkbox" data-offer-filter="${product}-${v.bankKey}" checked aria-label="Afficher ${product} ${BANKS[v.bankKey].name}">${seriesSwatch(product, v.bankKey)}<span>${BANKS[v.bankKey].name}</span></label>`).join('')}</fieldset>`).join('');
+      }
+
+      function syncOfferFilters() {
+        document.querySelectorAll('[data-offer-filter]').forEach(input => { input.checked = state.visible.has(input.dataset.offerFilter); });
+        document.querySelectorAll('[data-product-filter]').forEach(input => {
+          const keys = VARIANTS.filter(v => v.product === input.dataset.productFilter).map(v => `${v.product}-${v.bankKey}`);
+          const count = keys.filter(key => state.visible.has(key)).length;
+          input.checked = count === keys.length;
+          input.indeterminate = count > 0 && count < keys.length;
+        });
+        $('selection-count').textContent = `${state.visible.size} offre${state.visible.size > 1 ? 's' : ''} affichée${state.visible.size > 1 ? 's' : ''} · sélection appliquée aux graphiques, au classement et au tableau`;
+      }
+
+      function annualCheckpoints(start, exit) {
+        const origin = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12);
+        const anniversary = year => new Date(origin.getFullYear() + year, origin.getMonth(), Math.min(origin.getDate(), lastDay(origin.getFullYear() + year, origin.getMonth()).getDate()), 12);
+        const points = [{ date: origin, years: 0 }];
+        let year = 1;
+        while (anniversary(year) < exit) { points.push({ date: anniversary(year), years: year }); year++; }
+        const previous = anniversary(year - 1), next = anniversary(year);
+        points.push({ date: exit, years: year - 1 + (exit - previous) / (next - previous) });
+        return points;
+      }
+
+      function calculateHistory(p) {
+        const checkpoints = annualCheckpoints(p.now, p.exit);
+        const periods = checkpoints.map(point => p.dates.filter(date => date <= point.date));
+        const series = Object.fromEntries(state.results.map(result => [result.key, checkpoints.map((point, index) => {
+          if (index === 0 || !periods[index].length) return 0;
+          if (index === checkpoints.length - 1) return result.netCapital;
+          return simulate({ ...p, bankKey: result.bankKey, product: result.product, dates: periods[index], exit: point.date, taxMode: state.taxMode }).netCapital;
+        })]));
+        return { checkpoints, series };
+      }
+
+      function renderHistory() {
+        const rows = state.results.filter(r => state.visible.has(r.key));
+        const empty = !state.history || !rows.length;
+        $('history-empty').hidden = !empty;
+        $('history-plot').hidden = empty;
+        $('history-inspector').hidden = empty;
+        if (empty) {
+          $('history-empty').textContent = state.results.length ? 'Sélectionnez au moins une offre à afficher.' : 'Renseignez des paramètres valides pour afficher l’évolution.';
+          $('history-plot').replaceChildren(); $('history-values').replaceChildren(); return;
+        }
+        const { checkpoints, series } = state.history;
+        const index = state.historyIndex;
+        const width = $('history-plot').clientWidth || 300, height = 320;
+        const left = 66, right = width - 18, top = 22, bottom = height - 40;
+        const max = Math.max(1, ...rows.flatMap(r => series[r.key]));
+        const ceiling = max * 1.08;
+        const x = point => left + point.years / checkpoints.at(-1).years * (right - left);
+        const y = value => bottom - value / ceiling * (bottom - top);
+        const tickCount = Math.max(1, Math.min(6, Math.floor((right - left) / 75), checkpoints.length - 1));
+        const ticks = [...new Set(Array.from({length: tickCount + 1}, (_, i) => Math.round(i * (checkpoints.length - 1) / tickCount)))];
+        const grid = Array.from({length: 5}, (_, i) => {
+          const value = ceiling * i / 4, py = y(value);
+          return `<line x1="${left}" y1="${py}" x2="${right}" y2="${py}" stroke="var(--line)" /><text x="${left - 8}" y="${py + 4}" text-anchor="end">${fmtAxis.format(value)} €</text>`;
+        }).join('');
+        const axis = ticks.map(i => `<text x="${x(checkpoints[i])}" y="${bottom + 24}" text-anchor="${i === 0 ? 'start' : i === checkpoints.length - 1 ? 'end' : 'middle'}">${checkpoints[i].years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${checkpoints[i].years <= 1 ? 'an' : 'ans'}</text>`).join('');
+        const lines = rows.map(r => `<path data-series-key="${r.key}" d="${series[r.key].map((value, i) => `${i ? 'L' : 'M'}${x(checkpoints[i]).toFixed(2)},${y(value).toFixed(2)}`).join(' ')}" fill="none" stroke="${seriesColors[r.product]}" stroke-width="2.5" stroke-dasharray="${bankDashes[r.bankKey]}"><title>${r.product} · ${r.bank}</title></path>`).join('');
+        const cursor = `<line x1="${x(checkpoints[index])}" y1="${top}" x2="${x(checkpoints[index])}" y2="${bottom}" stroke="var(--muted)" opacity=".5" />`;
+        const dots = rows.map(r => `<circle cx="${x(checkpoints[index])}" cy="${y(series[r.key][index])}" r="4" fill="${seriesColors[r.product]}"><title>${r.product} · ${r.bank} : ${fmt.format(series[r.key][index])}</title></circle>`).join('');
+        $('history-plot').innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="history-svg-title history-svg-desc" style="font:12px system-ui;fill:var(--muted)"><title id="history-svg-title">Évolution annuelle du capital net en euros</title><desc id="history-svg-desc">${rows.length} offres comparées sur ${checkpoints.at(-1).years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ans. Le curseur Année à consulter donne les valeurs exactes pour chaque offre.</desc>${grid}${axis}${lines}${cursor}${dots}</svg>`;
+        $('history-year').max = checkpoints.length - 1;
+        $('history-year').value = index;
+        const pointLabel = `${index === 0 ? 'Départ' : `${checkpoints[index].years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${checkpoints[index].years <= 1 ? 'an' : 'ans'}`} · ${fmtDate.format(checkpoints[index].date)}${index === checkpoints.length - 1 ? ' · sortie' : ''}`;
+        $('history-date').textContent = pointLabel;
+        $('history-year').setAttribute('aria-valuetext', pointLabel);
+        $('history-values').innerHTML = rows.map(r => `<div class="history-value">${seriesSwatch(r.product, r.bankKey)}<span>${r.product} · ${r.bank}</span><strong>${fmt.format(series[r.key][index])}</strong></div>`).join('');
+      }
 
       function lastDay(year, month) { return new Date(year, month + 1, 0, 12); }
       function monthlyDates(start, end) {
@@ -469,7 +596,7 @@
         const p = readInputs();
         if (p.error || !p.dates.length) {
           $('status').textContent = p.error || 'La date doit permettre au moins un versement en fin de mois.';
-          state.results = []; render(); return;
+          state.results = []; state.history = null; render(); return;
         }
         $('status').textContent = '';
         state.results = [];
@@ -478,34 +605,42 @@
           state.results.push(simulate({ ...p, bankKey, product, taxMode: state.taxMode }));
           if (product === 'PER') state.altPerResults[bankKey] = simulate({ ...p, bankKey, product, taxMode: state.taxMode === 'keep' ? 'reinvest' : 'keep' });
         });
+        const wasAtEnd = !state.history || state.historyIndex === state.history.checkpoints.length - 1;
+        state.history = calculateHistory(p);
+        state.historyIndex = wasAtEnd ? state.history.checkpoints.length - 1 : Math.min(state.historyIndex, state.history.checkpoints.length - 1);
         const years = p.dates.length / 12;
         $('horizon').textContent = `${p.dates.length} versements · ${years.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} ans`;
         $('planned').textContent = fmt.format(p.monthly * p.dates.length);
         render();
       }
 
-      function sortedResults() { return [...state.results].sort((a, b) => state.direction * (a[state.sort] - b[state.sort])); }
+      function sortedResults() { return state.results.filter(r => state.visible.has(r.key)).sort((a, b) => state.direction * (a[state.sort] - b[state.sort])); }
       function render() {
+        syncOfferFilters();
+        renderHistory();
         const rows = sortedResults();
+        $('detail-panel').hidden = !rows.length;
+        $('comparison-empty').hidden = !!rows.length;
         if (!rows.length) {
+          $('comparison-empty').textContent = state.results.length ? 'Sélectionnez au moins une offre à afficher.' : 'Renseignez des paramètres valides pour comparer les offres.';
           $('best-value').textContent = $('planned').textContent = $('spread').textContent = '—';
           $('best-name').textContent = $('spread-meta').textContent = '—';
           $('chart').replaceChildren(); $('results-body').replaceChildren(); $('detail-grid').replaceChildren(); return;
         }
-        const byCapital = [...state.results].sort((a,b) => b.netCapital - a.netCapital);
+        const byCapital = [...rows].sort((a,b) => b.netCapital - a.netCapital);
         const best = byCapital[0], worst = byCapital.at(-1);
+        const selected = rows.find(r => r.key === state.selected) || best;
+        state.selected = selected.key;
         $('best-value').textContent = fmt.format(best.netCapital);
         $('best-name').textContent = `${best.product} · ${best.bank}`;
         $('spread').textContent = fmt.format(best.netCapital - worst.netCapital);
         $('spread-meta').textContent = `par rapport à ${worst.product} · ${worst.bank}`;
 
-        const max = Math.max(...state.results.map(r => r.netCapital), 1);
+        const max = Math.max(...rows.map(r => r.netCapital), 1);
         $('chart').innerHTML = byCapital.map(r => `<div class="bar-row"><button type="button" class="bar-label" data-select="${r.key}">${r.product} · ${r.bank}</button><div class="track" aria-hidden="true"><div class="bar" data-product="${r.product}" style="width:${(r.netCapital/max*100).toFixed(2)}%"></div></div><div class="bar-value">${fmt.format(r.netCapital)}</div></div>`).join('');
 
         $('results-body').innerHTML = rows.map(r => `<tr data-select="${r.key}" tabindex="0" class="${r.key === state.selected ? 'selected-row' : ''}" aria-selected="${r.key === state.selected}"><td><strong>${r.product}</strong>${r.capReached ? '<span class="badge">plafond atteint</span>' : ''}</td><td>${r.bank}</td><td class="fund-cell">${r.etf.short}<small>${r.etf.isin}</small></td><td>${fmtPct.format(r.etfAnnual)}</td><td>${fmtPct.format(r.wrapperAnnual)}</td><td>${fmt.format(r.contributions)}</td><td>${fmt.format(r.fees)}</td><td>${fmt.format(r.tax)}</td><td>${r.product === 'PER' ? fmt.format(r.taxSaving) : '—'}</td><td><strong>${fmt.format(r.netCapital)}</strong></td><td>${fmt.format(r.realEffort)}</td><td>${fmt.format(r.netGain)}</td></tr>`).join('');
 
-        const selected = state.results.find(r => r.key === state.selected) || best;
-        state.selected = selected.key;
         $('detail-title').textContent = `${selected.product} · ${selected.bank}`;
         const exitDescription = selected.product === 'PER'
           ? ` · ${selected.perExitMode === 'home' ? 'achat de la résidence principale' : 'sortie à la retraite'} · taux sur versements ${fmtPct.format(selected.perExitTaxRate)}` : '';
@@ -568,7 +703,19 @@
         return true;
       }
 
-      document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
+      document.querySelectorAll('.controls input, .controls select').forEach(el => el.addEventListener('input', calculate));
+      $('offer-filters').addEventListener('change', e => {
+        const input = e.target;
+        const keys = input.dataset.offerFilter ? [input.dataset.offerFilter] : VARIANTS.filter(v => v.product === input.dataset.productFilter).map(v => `${v.product}-${v.bankKey}`);
+        keys.forEach(key => { if (input.checked) state.visible.add(key); else state.visible.delete(key); });
+        render();
+      });
+      document.querySelectorAll('[data-offer-selection]').forEach(button => button.addEventListener('click', () => {
+        state.visible = new Set(button.dataset.offerSelection === 'all' ? VARIANTS.map(v => `${v.product}-${v.bankKey}`) : []);
+        render();
+      }));
+      $('history-year').addEventListener('input', e => { state.historyIndex = Number(e.target.value); renderHistory(); });
+      window.addEventListener('resize', renderHistory);
       document.querySelectorAll('[data-tax-mode]').forEach(btn => btn.addEventListener('click', () => {
         state.taxMode = btn.dataset.taxMode;
         document.querySelectorAll('[data-tax-mode]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
@@ -582,9 +729,10 @@
       });
       document.addEventListener('keydown', e => { const row = e.target.closest('tr[data-select]'); if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); state.selected = row.dataset.select; render(); } });
 
+      initOfferFilters();
       setDefaultDate();
       calculate();
-      window.EpargneCalculator = Object.freeze({ TAX, BANKS, ETFS, brokerage, monthlyDates, simulate, runSelfTests });
+      window.EpargneCalculator = Object.freeze({ TAX, BANKS, ETFS, brokerage, monthlyDates, simulate, annualCheckpoints, runSelfTests });
     })();
   </script>
 </body>
