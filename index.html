@@ -26,6 +26,7 @@
     }
 
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
@@ -61,6 +62,10 @@
       border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text);
     }
     input:invalid { border-color: var(--danger); }
+    .check-option { display: flex; align-items: center; gap: 10px; margin-top: 18px; color: var(--text); cursor: pointer; }
+    .check-option input { width: 22px; height: 22px; min-height: 22px; padding: 0; flex-shrink: 0; accent-color: var(--brand); }
+    .control-help { margin: 8px 0 0; color: var(--muted); font-size: .82rem; }
+    .control-help a { color: var(--brand-dark); }
     .input-wrap { position: relative; }
     .input-wrap input { padding-right: 34px; }
     .input-wrap span { position: absolute; top: 50%; right: 12px; translate: 0 -50%; color: var(--muted); pointer-events: none; }
@@ -173,16 +178,24 @@
           <span class="input-wrap"><input id="monthly" type="number" min="10" max="100000" step="10" value="500" inputmode="decimal"><span>€</span></span>
         </label>
         <label>
-          <span>Date de sortie / retraite</span>
+          <span id="exit-date-label">Date de sortie / retraite</span>
           <input id="exit-date" type="date">
         </label>
-        <label>
+        <label id="retirement-tax-field">
           <span>TMI à la retraite</span>
           <select id="tmi-retire">
             <option value="0">0 %</option><option value="11" selected>11 %</option><option value="30">30 %</option><option value="41">41 %</option><option value="45">45 %</option>
           </select>
         </label>
+        <label id="rp-tax-field" hidden>
+          <span>TMI lors de l’achat de la RP</span>
+          <select id="tmi-rp">
+            <option value="0">0 %</option><option value="11">11 %</option><option value="30" selected>30 %</option><option value="41">41 %</option><option value="45">45 %</option>
+          </select>
+        </label>
       </div>
+      <label class="check-option"><input id="per-rp" type="checkbox" aria-describedby="rp-help"><span>Sortie anticipée du PER pour l’achat de ma résidence principale</span></label>
+      <p id="rp-help" class="control-help" hidden>Déblocage total des versements volontaires à la date choisie. Les droits issus de versements obligatoires ne peuvent pas être débloqués pour ce motif. <a href="https://bofip.impots.gouv.fr/bofip/14911-PGP.html/identifiant=BOI-ANNX-000513-20260810" target="_blank" rel="noreferrer">Fiscalité de la sortie pour achat de la résidence principale ↗</a></p>
       <details>
         <summary>Hypothèses avancées</summary>
         <div class="advanced">
@@ -219,7 +232,7 @@
       </article>
     </section>
 
-    <div class="warning" role="note">Le PER suppose que la date choisie autorise la sortie et que votre plafond de déduction est suffisant. La TMI retraite est utilisée comme approximation du taux appliqué au capital versé.</div>
+    <div id="per-warning" class="warning" role="note" aria-live="polite">Le PER suppose que la date choisie autorise la sortie et que votre plafond de déduction est suffisant. La TMI retraite est utilisée comme approximation du taux appliqué au capital versé.</div>
 
     <details class="tariffs card">
       <summary>Barèmes bancaires appliqués</summary>
@@ -349,13 +362,14 @@
         result.serviceFees += fromCash + fromBalance;
       }
 
-      function simulate({ bankKey, product, monthly, dates, exit = dates.at(-1), grossAnnual, feeBuffer = 0, tmiNow, tmiRetire, taxMode }) {
+      function simulate({ bankKey, product, monthly, dates, exit = dates.at(-1), grossAnnual, feeBuffer = 0, tmiNow, tmiRetire, taxMode, perExitMode = 'retirement', tmiHome = tmiNow }) {
         const bank = BANKS[bankKey];
         const etf = ETFS[`${product}-${bankKey}`];
         const monthlyGross = Math.pow(1 + grossAnnual, 1 / 12) - 1;
         const wrapperMonthly = bank.wrapper[product] / 12;
         const etfAnnual = etf.fee + feeBuffer;
         const etfMonthly = etfAnnual / 12;
+        const perExitTaxRate = perExitMode === 'home' ? tmiHome : tmiRetire;
         const r = { key: `${product}-${bankKey}`, bankKey, bank: bank.name, plan: bank.plan, product, etf, etfAnnual, wrapperAnnual: bank.wrapper[product], balance: 0, cash: 0, outsideCash: 0, contributions: 0, deductibleContributions: 0, baseContributions: 0, fees: 0, serviceFees: 0, orderFees: 0, buyFees: 0, sellFees: 0, custodyFees: 0, wrapperFees: 0, etfFees: 0, taxSaving: 0, incomeTax: 0, socialTax: 0, tax: 0, netCapital: 0, realEffort: 0, netGain: 0, capReached: false, months: dates.length, ordersByYear: {} };
         let currentYear = dates.length ? dates[0].getFullYear() : new Date().getFullYear();
 
@@ -414,7 +428,12 @@
           r.incomeTax = exit >= fifthAnniversary ? 0 : gains * TAX.incomeCapital;
           r.socialTax = gains * TAX.social;
         }
-        if (product === 'PER') { r.incomeTax = r.deductibleContributions * tmiRetire + gains * TAX.incomeCapital; r.socialTax = gains * TAX.social; }
+        if (product === 'PER') {
+          r.perExitMode = perExitMode;
+          r.perExitTaxRate = perExitTaxRate;
+          r.incomeTax = r.deductibleContributions * perExitTaxRate + gains * TAX.incomeCapital;
+          r.socialTax = gains * TAX.social;
+        }
         r.incomeTax = Math.min(r.balance, r.incomeTax);
         r.socialTax = Math.min(Math.max(0, r.balance - r.incomeTax), r.socialTax);
         r.tax = r.incomeTax + r.socialTax;
@@ -426,6 +445,14 @@
       }
 
       function readInputs() {
+        const homePurchase = $('per-rp').checked;
+        $('retirement-tax-field').hidden = homePurchase;
+        $('rp-tax-field').hidden = !homePurchase;
+        $('rp-help').hidden = !homePurchase;
+        $('exit-date-label').textContent = homePurchase ? 'Date d’achat de la résidence principale' : 'Date de sortie / retraite';
+        $('per-warning').textContent = homePurchase
+          ? 'Achat de la résidence principale : les versements déduits sont imposés au taux de sortie retenu, sans abattement de 10 %, et les gains au PFU. La TMI est utilisée comme taux effectif simplifié : les changements de tranche liés au retrait ne sont pas calculés. Le plafond de déduction est supposé suffisant.'
+          : 'Le PER suppose que la date choisie autorise la sortie et que votre plafond de déduction est suffisant. La TMI retraite est utilisée comme approximation du taux appliqué au capital versé.';
         const exit = new Date(`${$('exit-date').value}T12:00:00`);
         const monthly = Number($('monthly').value);
         const grossAnnual = Number($('gross-return').value) / 100;
@@ -435,7 +462,7 @@
         $('etf-output').textContent = `+ ${fmtPct.format(feeBuffer)}`;
         if (!Number.isFinite(monthly) || monthly < 10) return { error: 'Indiquez une épargne mensuelle d’au moins 10 €.' };
         if (!Number.isFinite(exit.getTime()) || exit <= now) return { error: 'Choisissez une date de sortie future.' };
-        return { now, exit, monthly, grossAnnual, feeBuffer, tmiNow: Number($('tmi-now').value) / 100, tmiRetire: Number($('tmi-retire').value) / 100, dates: monthlyDates(now, exit) };
+        return { now, exit, monthly, grossAnnual, feeBuffer, tmiNow: Number($('tmi-now').value) / 100, tmiRetire: Number($('tmi-retire').value) / 100, perExitMode: homePurchase ? 'home' : 'retirement', tmiHome: Number($('tmi-rp').value) / 100, dates: monthlyDates(now, exit) };
       }
 
       function calculate() {
@@ -480,7 +507,9 @@
         const selected = state.results.find(r => r.key === state.selected) || best;
         state.selected = selected.key;
         $('detail-title').textContent = `${selected.product} · ${selected.bank}`;
-        $('detail-subtitle').textContent = `${selected.plan} · frais annuels ${fmtPct.format(selected.etfAnnual + selected.wrapperAnnual)}`;
+        const exitDescription = selected.product === 'PER'
+          ? ` · ${selected.perExitMode === 'home' ? 'achat de la résidence principale' : 'sortie à la retraite'} · taux sur versements ${fmtPct.format(selected.perExitTaxRate)}` : '';
+        $('detail-subtitle').textContent = `${selected.plan} · frais annuels ${fmtPct.format(selected.etfAnnual + selected.wrapperAnnual)}${exitDescription}`;
         $('detail-fund').innerHTML = `<strong>${selected.etf.name}</strong> · ${selected.etf.kind} · ${selected.etf.isin} · ${fmtPct.format(selected.etfAnnual)} <span class="badge ${selected.etf.verified ? 'ok' : ''}">${selected.etf.status}</span> · <a href="${selected.etf.source}" target="_blank" rel="noreferrer">Ouvrir la fiche officielle ↗</a>`;
         const metrics = [
           ['Capital avant impôt', selected.balance + selected.cash + selected.outsideCash], ['Capital net', selected.netCapital], ['Impôt sur le revenu', selected.incomeTax], ['Prélèvements sociaux', selected.socialTax],
@@ -515,6 +544,10 @@
         console.assert(Math.abs(cto.netCapital - (6000 - 12*1.99 - brokerage('bourso','CTO',6000-12*1.99,'sell'))) < .05, 'Zero-return CTO');
         const per = simulate({ ...base, product: 'PER' });
         console.assert(Math.abs(per.tax - per.deductibleContributions * .11) < .05, 'PER contribution tax');
+        const homePurchase = simulate({ ...base, product: 'PER', perExitMode: 'home', tmiHome: .3 });
+        console.assert(Math.abs(homePurchase.tax - homePurchase.deductibleContributions * .3) < .05, 'PER residence purchase contribution tax');
+        const homeSameRate = simulate({ ...base, product: 'PER', perExitMode: 'home', tmiHome: .11 });
+        console.assert(Math.abs(homeSameRate.netCapital - per.netCapital) < .01, 'Same PER tax rules at equal exit rates');
         const perZeroTmi = simulate({ ...base, product: 'PER', tmiNow: 0 });
         const perZeroTmiReinvest = simulate({ ...base, product: 'PER', tmiNow: 0, taxMode: 'reinvest' });
         console.assert(Math.abs(perZeroTmi.netCapital - perZeroTmiReinvest.netCapital) < .01, 'TMI zero scenarios');
