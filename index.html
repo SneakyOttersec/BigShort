@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Comparateur PER, PEA et CTO</title>
-  <meta name="description" content="Simulation comparative PER, PEA et CTO chez BoursoBank, Fortuneo et Crédit Agricole Île-de-France.">
+  <title>BigShort — PER vs PEA</title>
+  <meta name="description" content="BigShort : comparez PER, PEA et CTO, ou assurance-vie et CTO pour un enfant, après frais et fiscalité.">
   <meta name="theme-color" content="#fafafa">
   <link rel="icon" href="data:,">
   <style>
@@ -61,6 +61,10 @@
     .site-nav a { padding-right: 14px; border-right: 1px dotted var(--brand); color: var(--brand); text-decoration: none; }
     .site-nav a:hover { text-decoration: underline; }
     .site-nav span { color: var(--muted); }
+    .tool-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .tool-nav a { padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); text-decoration: none; }
+    .tool-nav a[aria-current="page"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .tool-nav a:hover { border-color: var(--brand); }
     h1, h2, h3, p { margin-top: 0; }
     h1 { max-width: 1000px; margin-bottom: 0; font-size: clamp(1.4rem, 3.5vw, 2rem); line-height: 1.4; letter-spacing: .01em; }
     h2 { margin-bottom: 18px; color: var(--brand); font-size: 1.2rem; }
@@ -215,10 +219,11 @@
 <body>
   <main class="shell">
     <header>
-      <nav class="site-nav" aria-label="Navigation du site"><a href="https://sneakyottersec.github.io/">Ottersec Blog</a><span>PERPEA</span></nav>
+      <nav class="site-nav" aria-label="Navigation du site"><a href="https://sneakyottersec.github.io/">Ottersec Blog</a><span>BigShort</span></nav>
+      <nav class="tool-nav" aria-label="Simulateurs BigShort"><a href="./" aria-current="page">PER vs PEA</a><a href="enfant.html">AV vs CTO · enfant</a></nav>
       <div class="eyebrow">Simulation patrimoniale 2026</div>
       <h1>PER, PEA ou CTO&nbsp;: comparez ce qu’il vous reste vraiment.</h1>
-      <p class="lede">Même versement mensuel, avec le support Monde le moins chargé identifié dans chaque enveloppe. Chaque frais est séparé pour rendre la comparaison contrôlable.</p>
+      <p class="lede">Même versement mensuel, avec un support Monde identifié dans chaque enveloppe. Chaque frais est séparé pour rendre la comparaison contrôlable. Sélection non exhaustive des supports disponibles.</p>
     </header>
 
     <section class="controls card" aria-labelledby="params-title">
@@ -302,7 +307,7 @@
 
     <details class="tariffs card">
       <summary>Barèmes bancaires appliqués</summary>
-      <p><strong>BoursoBank Découverte</strong> — CTO&nbsp;: 1,99&nbsp;€ jusqu’à 500&nbsp;€, puis 0,60&nbsp;% par ordre; PEA plafonné à 0,50&nbsp;% par ordre; achat minimum modélisé à 20&nbsp;€ en CTO et 100&nbsp;€ en PEA; droits de garde et inactivité 0&nbsp;€. PER Matla&nbsp;: frais d’entrée, versement, arbitrage et sortie en capital 0&nbsp;€, gestion 0,50&nbsp;%/an.</p>
+      <p><strong>BoursoBank Découverte</strong> — CTO&nbsp;: 1,99&nbsp;€ jusqu’à 500&nbsp;€, puis 0,60&nbsp;% par ordre; PEA plafonné à 0,50&nbsp;% par ordre; achat d’ETF minimum de 100&nbsp;€ en CTO comme en PEA; droits de garde et inactivité 0&nbsp;€. PER Matla&nbsp;: frais d’entrée, versement, arbitrage et sortie en capital 0&nbsp;€, gestion 0,50&nbsp;%/an.</p>
       <p><strong>Fortuneo Starter</strong> — premier achat mensuel jusqu’à 500&nbsp;€ gratuit, sinon 0,35&nbsp;%; achat minimum PEA de 400&nbsp;€; garde et tenue de compte 0&nbsp;€. PER&nbsp;: entrée, versement, arbitrage et rachat 0&nbsp;€, gestion 0,50&nbsp;%/an, transaction ETF 0,10&nbsp;% à l’achat et à la vente, transfert sortant avant 5 ans jusqu’à 1&nbsp;%.</p>
       <p><strong>Crédit Agricole Île-de-France Offre Bourse Intégral — PEA uniquement</strong> — droits de garde exonérés; service gratuit à partir de 12 ordres/an, sinon 96&nbsp;€; courtage&nbsp;: 0,48&nbsp;% jusqu’à 500&nbsp;€, 0,18&nbsp;% jusqu’à 1&nbsp;000&nbsp;€, puis 0,12&nbsp;%. Les éventuels frais de marché ne sont pas publiés à l’avance.</p>
       <p><strong>Linxea Spirit PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF 0,10&nbsp;% chacun; versement, arbitrage et sortie en capital 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
@@ -388,7 +393,7 @@
 
       const TAX = Object.freeze({ social: 0.186, incomeCapital: 0.128, pfu: 0.314, peaCap: 150000 });
       const BANKS = Object.freeze({
-        bourso: { name: 'BoursoBank', plan: 'Découverte', min: { PER: 50, PEA: 100, CTO: 20 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
+        bourso: { name: 'BoursoBank', plan: 'Découverte', min: { PER: 50, PEA: 100, CTO: 100 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
         fortuneo: { name: 'Fortuneo', plan: 'Starter', min: { PER: 50, PEA: 400, CTO: 0 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
         ca: { name: 'Crédit Agricole IDF', plan: 'Offre Bourse Intégral', min: { PEA: 0 }, wrapper: { PEA: 0 } },
         linxea: { name: 'Linxea', plan: 'Spirit PER', min: { PER: 50 }, wrapper: { PER: .005 } },
@@ -398,12 +403,12 @@
         'PEA-bourso': { name: 'Amundi PEA Monde (MSCI World) Acc', short: 'Amundi PEA Monde', isin: 'FR001400U5Q4', fee: .002, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/FR001400U5Q4/FRA/FRA/RETAIL/ETF' },
         'PEA-fortuneo': { name: 'Amundi PEA Monde (MSCI World) Acc', short: 'Amundi PEA Monde', isin: 'FR001400U5Q4', fee: .002, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/FR001400U5Q4/FRA/FRA/RETAIL/ETF' },
         'PEA-ca': { name: 'Amundi PEA Monde (MSCI World) Acc', short: 'Amundi PEA Monde', isin: 'FR001400U5Q4', fee: .002, kind: 'ETF MSCI World', status: 'Moins cher vérifié, disponibilité à confirmer', verified: false, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/FR001400U5Q4/FRA/FRA/RETAIL/ETF' },
-        'CTO-bourso': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
-        'CTO-fortuneo': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Ex æquo moins cher vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
+        'CTO-bourso': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Frais vérifiés · sélection non exhaustive', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
+        'CTO-fortuneo': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Frais vérifiés · sélection non exhaustive', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
         'PER-bourso': { name: 'Bourso Invest – Bourso Monde', short: 'Bourso Monde', isin: 'FR001400RWK6', fee: .0059, kind: 'Fonds nourricier d’ETF', status: 'Support Monde GL le moins chargé repéré', verified: true, source: 'https://www.oradeavie.fr/fileadmin/user_upload/oradeavie/documents_de_performance/1636-MATLA-PERFORMANCE-202603.pdf' },
         'PER-fortuneo': { name: 'Amundi MSCI World Swap II UCITS ETF Dist', short: 'Amundi World II', isin: 'FR0010315770', fee: .003, kind: 'ETF MSCI World', status: 'Moins cher du catalogue PER public vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/kid-priips/FR0010315770/FRA/FRA' },
-        'PER-linxea': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher du catalogue officiel vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
-        'PER-lucya': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Moins cher du catalogue officiel vérifié', verified: true, source: 'https://app.lucya.com/asv/nos-fonds/opcvm/IE000BI8OT95/0P0001S8XB' }
+        'PER-linxea': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Support référencé · sélection non exhaustive', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
+        'PER-lucya': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Support référencé · sélection non exhaustive', verified: true, source: 'https://app.lucya.com/asv/nos-fonds/opcvm/IE000BI8OT95/0P0001S8XB' }
       });
       const PRODUCTS = ['PER', 'PEA', 'CTO'];
       const VARIANTS = Object.freeze([
