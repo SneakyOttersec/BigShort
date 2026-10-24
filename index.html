@@ -132,8 +132,14 @@
     .selection legend .check-option { font-size: 1rem; }
     .line-swatch { width: 28px; height: 10px; flex-shrink: 0; }
     .history-description, .empty-message { color: var(--muted); font-size: .875rem; }
+    .history-frame { position: relative; }
     .history-plot { width: 100%; height: 460px; }
     .history-plot svg { display: block; width: 100%; height: 100%; }
+    .history-tooltip { position: absolute; z-index: 2; width: max-content; max-width: calc(100% - 16px); padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: var(--radius); background: var(--surface); color: var(--text); pointer-events: none; font-size: .8rem; line-height: 1.6; overflow-wrap: anywhere; }
+    .history-tooltip-date, .history-tooltip-label { color: var(--muted); }
+    .history-tooltip-name { display: block; margin: 4px 0; }
+    .history-tooltip-amount { display: block; font-size: 1rem; font-variant-numeric: tabular-nums; }
+    .history-tooltip-net { margin-top: 6px; }
     .history-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
     .history-toolbar label { min-width: 190px; }
     .history-legend-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 14px; }
@@ -347,8 +353,18 @@
         <label><span>Échelle verticale</span><select id="history-scale"><option value="auto" selected>Automatique — ajustée</option><option value="zero">À partir de 0 €</option></select></label>
       </div>
       <p id="history-view-note" class="history-description"></p>
+      <p class="summary-meta">Survolez le graphique pour lire une valeur ; sur mobile, touchez une courbe.</p>
       <p id="history-empty" class="empty-message" hidden></p>
-      <div id="history-plot" class="history-plot"></div>
+      <div id="history-frame" class="history-frame">
+        <div id="history-plot" class="history-plot"></div>
+        <div id="history-tooltip" class="history-tooltip" role="tooltip" hidden>
+          <div id="history-tooltip-date" class="history-tooltip-date"></div>
+          <strong id="history-tooltip-name" class="history-tooltip-name"></strong>
+          <div id="history-tooltip-label" class="history-tooltip-label">Capital net</div>
+          <strong id="history-tooltip-amount" class="history-tooltip-amount"></strong>
+          <div id="history-tooltip-net-row" class="history-tooltip-net" hidden>Capital net : <span id="history-tooltip-net"></span></div>
+        </div>
+      </div>
       <div id="history-inspector" class="history-inspector">
         <label for="history-year"><span>Année à consulter</span><strong id="history-date"></strong></label>
         <input id="history-year" type="range" min="0" max="1" step="1" value="1">
@@ -395,7 +411,7 @@
         { bankKey: 'ca', product: 'PEA' },
         { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }
       ]);
-      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null, historyHidden: new Set(), historyAutoBest: true, historyView: 'capital', historyWindow: 5, historyScale: 'auto' };
+      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null, historyHidden: new Set(), historyAutoBest: true, historyView: 'capital', historyWindow: 5, historyScale: 'auto', historyPlot: null, historyTooltipPinned: false };
       const $ = id => document.getElementById(id);
       const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
       const fmtExact = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -471,7 +487,78 @@
         return { floor, ceiling, step, ticks };
       }
 
+      function updateHistoryInspection(index) {
+        const model = state.historyPlot;
+        if (!model) return;
+        const { checkpoints, values, x, y } = model;
+        state.historyIndex = index;
+        $('history-year').value = index;
+        const pointLabel = `${index === 0 ? 'Départ' : `${checkpoints[index].years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${checkpoints[index].years <= 1 ? 'an' : 'ans'}`} · ${fmtDate.format(checkpoints[index].date)}${index === checkpoints.length - 1 ? ' · sortie' : ''}`;
+        $('history-date').textContent = pointLabel;
+        $('history-year').setAttribute('aria-valuetext', pointLabel);
+        const cursor = $('history-cursor');
+        cursor.setAttribute('x1', x(checkpoints[index])); cursor.setAttribute('x2', x(checkpoints[index]));
+        document.querySelectorAll('[data-history-point]').forEach(dot => {
+          const key = dot.dataset.historyPoint;
+          dot.setAttribute('cx', x(checkpoints[index])); dot.setAttribute('cy', y(values[key][index]));
+          dot.setAttribute('r', 4); dot.setAttribute('fill', seriesColors[key]); dot.removeAttribute('stroke');
+        });
+        document.querySelectorAll('[data-history-toggle]').forEach(button => {
+          if (values[button.dataset.historyToggle]) button.querySelector('strong').textContent = fmt.format(values[button.dataset.historyToggle][index]);
+        });
+      }
+
+      function hideHistoryTooltip() {
+        $('history-tooltip').hidden = true;
+        state.historyTooltipPinned = false;
+        $('history-plot').removeAttribute('data-hover-key');
+        document.querySelectorAll('[data-history-point]').forEach(dot => {
+          dot.setAttribute('r', 4); dot.setAttribute('fill', seriesColors[dot.dataset.historyPoint]); dot.removeAttribute('stroke');
+        });
+      }
+
+      function showHistoryTooltip(event) {
+        const model = state.historyPlot;
+        if (!model) return;
+        const rect = $('history-plot').getBoundingClientRect();
+        const px = (event.clientX - rect.left) * model.width / rect.width;
+        const py = (event.clientY - rect.top) * model.height / rect.height;
+        if (px < model.left - 6 || px > model.right + 6 || py < model.top - 6 || py > model.bottom + 6) { hideHistoryTooltip(); return; }
+        const { checkpoints, values, series, rows, x, y } = model;
+        let index = model.firstIndex;
+        for (let i = index + 1; i < checkpoints.length; i++) {
+          if (Math.abs(x(checkpoints[i]) - px) < Math.abs(x(checkpoints[index]) - px)) index = i;
+        }
+        let upper = model.firstIndex + 1;
+        while (upper < checkpoints.length - 1 && x(checkpoints[upper]) < px) upper++;
+        const lower = upper - 1;
+        const fraction = Math.max(0, Math.min(1, (px - x(checkpoints[lower])) / (x(checkpoints[upper]) - x(checkpoints[lower]))));
+        const distance = row => Math.abs(py - (y(values[row.key][lower]) + fraction * (y(values[row.key][upper]) - y(values[row.key][lower]))));
+        const nearest = rows.reduce((best, row) => distance(row) < distance(best) ? row : best);
+        updateHistoryInspection(index);
+        $('history-tooltip-date').textContent = $('history-date').textContent;
+        $('history-tooltip-name').textContent = `${nearest.product} · ${nearest.bank}`;
+        $('history-tooltip-label').textContent = model.gapView ? 'Écart au meilleur' : 'Capital net';
+        $('history-tooltip-amount').textContent = fmtExact.format(values[nearest.key][index]);
+        $('history-tooltip-net-row').hidden = !model.gapView;
+        $('history-tooltip-net').textContent = fmtExact.format(series[nearest.key][index]);
+        $('history-plot').dataset.hoverKey = nearest.key;
+        const dot = Array.from(document.querySelectorAll('[data-history-point]')).find(point => point.dataset.historyPoint === nearest.key);
+        dot.setAttribute('r', 6); dot.setAttribute('fill', 'var(--surface)'); dot.setAttribute('stroke', seriesColors[nearest.key]); dot.setAttribute('stroke-width', 2.5);
+        const tooltip = $('history-tooltip');
+        tooltip.style.borderLeftColor = seriesColors[nearest.key];
+        tooltip.hidden = false;
+        const tooltipX = event.clientX - rect.left, tooltipY = event.clientY - rect.top;
+        let left = tooltipX + 14, top = tooltipY - tooltip.offsetHeight - 14;
+        if (left + tooltip.offsetWidth > rect.width - 8) left = tooltipX - tooltip.offsetWidth - 14;
+        if (top < 8) top = tooltipY + 14;
+        tooltip.style.left = `${Math.max(8, Math.min(left, rect.width - tooltip.offsetWidth - 8))}px`;
+        tooltip.style.top = `${Math.max(8, Math.min(top, rect.height - tooltip.offsetHeight - 8))}px`;
+      }
+
       function renderHistory() {
+        hideHistoryTooltip();
+        state.historyPlot = null;
         if (state.historyAutoBest) selectBestHistoryOffers();
         const candidates = state.results.filter(r => state.visible.has(r.key));
         const rows = candidates.filter(r => !state.historyHidden.has(r.key));
@@ -534,20 +621,15 @@
           return `<line x1="${left}" y1="${py}" x2="${right}" y2="${py}" stroke="var(--line)" /><text data-y-tick="${value}" x="${left - 8}" y="${py + 4}" text-anchor="end">${axisLabels[i]}</text>`;
         }).join('');
         const axis = ticks.map((years, i) => `<text data-x-tick="${years}" x="${xYear(years)}" y="${bottom + 24}" text-anchor="${i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle'}">${yearSpan < 1 ? i === 0 ? 'Départ' : 'Sortie' : `${years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${years <= 1 ? 'an' : 'ans'}`}</text>`).join('');
-        const lines = rows.map(r => `<path data-series-key="${r.key}" d="${values[r.key].slice(firstIndex).map((value, i) => `${i ? 'L' : 'M'}${x(visiblePoints[i]).toFixed(2)},${y(value).toFixed(2)}`).join(' ')}" fill="none" stroke="${seriesColors[r.key]}" stroke-width="2.5" stroke-dasharray="${bankDashes[r.bankKey]}"><title>${r.product} · ${r.bank}</title></path>`).join('');
-        const cursor = `<line x1="${x(checkpoints[index])}" y1="${top}" x2="${x(checkpoints[index])}" y2="${bottom}" stroke="var(--muted)" opacity=".5" />`;
-        const dots = rows.map(r => `<circle cx="${x(checkpoints[index])}" cy="${y(values[r.key][index])}" r="4" fill="${seriesColors[r.key]}"><title>${r.product} · ${r.bank} : ${fmt.format(values[r.key][index])}</title></circle>`).join('');
+        const lines = rows.map(r => `<path data-series-key="${r.key}" d="${values[r.key].slice(firstIndex).map((value, i) => `${i ? 'L' : 'M'}${x(visiblePoints[i]).toFixed(2)},${y(value).toFixed(2)}`).join(' ')}" fill="none" stroke="${seriesColors[r.key]}" stroke-width="2.5" stroke-dasharray="${bankDashes[r.bankKey]}" aria-label="${r.product} · ${r.bank}" />`).join('');
+        const cursor = `<line id="history-cursor" x1="${x(checkpoints[index])}" y1="${top}" x2="${x(checkpoints[index])}" y2="${bottom}" stroke="var(--muted)" opacity=".5" pointer-events="none" />`;
+        const dots = rows.map(r => `<circle data-history-point="${r.key}" cx="${x(checkpoints[index])}" cy="${y(values[r.key][index])}" r="4" fill="${seriesColors[r.key]}" pointer-events="none" />`).join('');
         const measureLabel = gapView ? 'Écart au meilleur (€)' : 'Capital net (€)';
         $('history-plot').innerHTML = `<svg viewBox="0 0 ${width} ${height}" data-view="${state.historyView}" data-first-year="${visiblePoints[0].years}" data-y-min="${floor}" data-y-max="${ceiling}" data-y-step="${step}" role="img" aria-labelledby="history-svg-title history-svg-desc" style="font:12px var(--font-mono);fill:var(--muted)"><title id="history-svg-title">${measureLabel}</title><desc id="history-svg-desc">${rows.length} courbes visibles. Période : de ${visiblePoints[0].years} à ${checkpoints.at(-1).years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ans. Le curseur Année à consulter donne les valeurs exactes.</desc><text x="${left}" y="16" fill="var(--text)">${measureLabel}</text>${grid}${axis}${lines}${cursor}${dots}</svg>`;
         $('history-year').min = firstIndex;
         $('history-year').max = checkpoints.length - 1;
-        $('history-year').value = index;
-        const pointLabel = `${index === 0 ? 'Départ' : `${checkpoints[index].years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${checkpoints[index].years <= 1 ? 'an' : 'ans'}`} · ${fmtDate.format(checkpoints[index].date)}${index === checkpoints.length - 1 ? ' · sortie' : ''}`;
-        $('history-date').textContent = pointLabel;
-        $('history-year').setAttribute('aria-valuetext', pointLabel);
-        document.querySelectorAll('[data-history-toggle]').forEach(button => {
-          if (values[button.dataset.historyToggle]) button.querySelector('strong').textContent = fmt.format(values[button.dataset.historyToggle][index]);
-        });
+        state.historyPlot = { checkpoints, series, values, rows, firstIndex, width, height, left, right, top, bottom, x, y, gapView };
+        updateHistoryInspection(index);
         const overlap = rows.some((r, i) => rows.slice(i + 1).some(other => series[r.key].slice(firstIndex).every((value, j) => Math.abs(value - series[other.key][firstIndex + j]) < .005)));
         $('history-overlap').hidden = !overlap;
       }
@@ -824,6 +906,12 @@
         render();
       }));
       $('history-year').addEventListener('input', e => { state.historyIndex = Number(e.target.value); renderHistory(); });
+      $('history-plot').addEventListener('pointermove', event => { if (event.pointerType !== 'touch') showHistoryTooltip(event); });
+      $('history-plot').addEventListener('pointerdown', event => { showHistoryTooltip(event); state.historyTooltipPinned = event.pointerType === 'touch' && !$('history-tooltip').hidden; });
+      $('history-plot').addEventListener('pointerleave', () => { if (!state.historyTooltipPinned) hideHistoryTooltip(); });
+      $('history-plot').addEventListener('pointercancel', hideHistoryTooltip);
+      document.addEventListener('pointerdown', event => { if (!event.target.closest('#history-plot')) hideHistoryTooltip(); });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape') hideHistoryTooltip(); });
       $('history-values').addEventListener('click', e => {
         const button = e.target.closest('[data-history-toggle]');
         if (!button) return;
