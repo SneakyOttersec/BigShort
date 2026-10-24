@@ -230,21 +230,32 @@
     $('child-paid').textContent = euro(state.results[0].paid);
     $('child-gap').textContent = bestAv && bestCto ? euro(Math.abs(bestAv.net - bestCto.net)) : '—';
     $('child-gap-label').textContent = bestAv && bestCto ? `en faveur de ${bestAv.net >= bestCto.net ? bestAv.offer.name : bestCto.offer.name}` : 'Comparaison AV/CTO indisponible : vérifiez les minima initiaux.';
-    const messages = ['BoursoBank : ouverture d’un CTO mineur non confirmée ; calcul tarifaire indicatif, exclu du classement et du choix automatique des courbes.'];
+    const messages = ['BoursoBank : CTO mineur à confirmer — chiffres indicatifs, hors classement.'];
     if (state.params.initial < 500) messages.push('AV Linxea et Lucya : versement initial minimum de 500 € non respecté, offres hors classement.');
     if (state.params.initial < 100) messages.push('CTO Fortuneo : minimum d’ouverture de 100 € non respecté, offre hors classement.');
     if (!isAtLeast(state.params.birth, state.params.exit, 18)) messages.push('Sortie pendant la minorité : les opérations restent soumises aux règles de représentation et de gestion des biens du mineur.');
     if (state.params.regime === 'scale') messages.push('Barème approximé par une TMI constante : un rachat important peut changer de tranche. Le résultat n’est pas un calcul complet de l’IR.');
     $('eligibility-note').textContent = messages.join(' ');
     $('child-rows').innerHTML = ranked.map(r => `<tr class="${state.selected === r.offer.id ? 'selected' : ''}"><td><button type="button" class="offer-button" data-child-select="${r.offer.id}">${r.offer.type} · ${r.offer.name}</button><small>${r.offer.id === 'bourso' ? 'Mineur : à confirmer · hors classement' : r.eligible ? 'Ouverture mineur documentée' : `Minimum initial ${euro(r.offer.minInitial)} non respecté`}</small>${!r.eligible ? '<span class="badge">Chiffres théoriques · non classés</span>' : ''}</td><td>${pct(FUNDS[r.offer.fund].ongoing)}<small>+ ${pct(FUNDS[r.offer.fund].internal)} transactions internes estimées</small></td><td>${pct(r.offer.wrapper)}<small>${r.offer.type === 'AV' ? 'gestion libre UC' : 'garde / tenue : 0 €'}</small></td><td>${euro(r.paid)}</td><td>${euro(r.totalFees)}</td><td>${euro(r.tax.total)}</td><td><strong>${euro(r.net)}</strong></td><td>${euro(r.gain)}</td></tr>`).join('');
+    renderExitChart(ranked);
     renderDetail();
+  }
+
+  function renderExitChart(ranked) {
+    const max = Math.max(1, ...ranked.map(r => r.net));
+    $('child-exit-caption').textContent = `Au ${dateFormat.format(state.params.exit)} · même budget pour chaque offre`;
+    $('child-exit-chart').innerHTML = ranked.map(r => {
+      const note = r.eligible ? '' : r.offer.id === 'bourso' ? 'Indicatif · éligibilité mineur à confirmer' : 'Indicatif · minimum initial non respecté';
+      return `<div class="exit-row" data-eligible="${r.eligible}" data-selected="${r.offer.id === state.selected}"><button type="button" class="exit-label" data-child-bar="${r.offer.id}" aria-label="Voir la décomposition ${r.offer.type} ${r.offer.name}, ${euro(r.net)}${note ? ', ' + note : ''}">${r.offer.type} · ${r.offer.name}${note ? `<small>${note}</small>` : ''}</button><div class="exit-track" aria-hidden="true"><div class="exit-bar" style="--curve:${r.offer.color};width:${Math.max(0, r.net / max * 100).toFixed(3)}%"></div></div><span class="exit-value">${euro(r.net)}</span></div>`;
+    }).join('');
   }
 
   function renderDetail() {
     const r = state.results.find(item => item.offer.id === state.selected) || state.results[0];
     const offer = r.offer, fund = FUNDS[offer.fund];
-    $('child-detail-title').textContent = `Fiche descriptive — ${offer.type} ${offer.name}`;
-    $('child-fund').innerHTML = `<strong>${fund.name}</strong> · ${fund.isin}<br><a href="${fund.source}" target="_blank" rel="noreferrer">Frais officiels / DIC ↗</a> · <a href="${fund.factsheet}" target="_blank" rel="noreferrer">Fiche ETF ↗</a> · <a href="${fund.availability}" target="_blank" rel="noreferrer">${offer.type === 'AV' ? 'Référencement dans le catalogue' : 'Fiche du support (ne vaut pas confirmation de négociabilité chez ce courtier)'} ↗</a><br>${fund.note}`;
+    $('child-detail-title').textContent = `Décomposition — ${offer.type} ${offer.name}`;
+    $('child-fund').innerHTML = `<strong>${fund.name}</strong> · ${fund.isin}<br><a href="${fund.source}" target="_blank" rel="noreferrer">Frais officiels / DIC ↗</a> · <a href="${fund.factsheet}" target="_blank" rel="noreferrer">Fiche ETF ↗</a> · <a href="${fund.availability}" target="_blank" rel="noreferrer">${offer.type === 'AV' ? 'Catalogue' : 'Fiche du support'} ↗</a>`;
+    $('child-fund-note').textContent = fund.note + (offer.type === 'CTO' ? ' La fiche du support ne vaut pas confirmation de sa négociabilité chez ce courtier.' : '');
     const buyTariff = offer.type === 'AV' ? pct(offer.trade) : offer.id === 'fortuneo' ? '1er ordre du mois ≤ 500 € : 0 €, sinon 0,35 %' : '1,99 € ≤ 500 €, sinon 0,60 %';
     const sellTariff = offer.type === 'AV' ? offer.id === 'lucya' ? `${pct(r.saleRate)} à la date choisie (0,10 % avant 10 ans)` : pct(r.saleRate) : buyTariff;
     const rows = [
@@ -259,8 +270,11 @@
       ['Total des frais modélisés', 'Somme, sans double comptage', r.totalFees]
     ];
     $('child-fee-rows').innerHTML = rows.map(([label, tariff, value]) => `<tr><td>${label}</td><td>${tariff}</td><td>${exact(value)}</td></tr>`).join('');
-    const metrics = [['Budget versé', r.paid], ['Base fiscale des versements investis', r.basis], ['Cash en attente non rémunéré', r.cash], ['Gains imposables avant abattement', r.tax.gain], ['Abattement AV utilisé à cette sortie', r.tax.allowance], ['Impôt sur le revenu', r.tax.ir], ['Prélèvements sociaux', r.tax.social], ['Capital net disponible', r.net], ['Gain net après frais et impôts', r.gain]];
-    $('child-tax-detail').innerHTML = metrics.map(([name, value]) => `<div class="metric"><span>${name}</span><strong>${exact(value)}</strong></div>`).join('');
+    const metrics = [['Versements', r.paid], ['Frais cumulés', r.totalFees], ['Impôt sur le revenu', r.tax.ir], ['Prélèvements sociaux', r.tax.social], ['Capital net disponible', r.net], ['Gain net', r.gain]];
+    const extra = [['Base fiscale des versements investis', r.basis], ['Cash en attente non rémunéré', r.cash], ['Gains imposables avant abattement', r.tax.gain], ['Abattement AV utilisé à cette sortie', r.tax.allowance]];
+    const metric = ([name, value]) => `<div class="metric"><span>${name}</span><strong>${exact(value)}</strong></div>`;
+    $('child-tax-detail').innerHTML = metrics.map(metric).join('');
+    $('child-tax-extra').innerHTML = extra.map(metric).join('');
     $('child-offer-note').innerHTML = `${offer.note} <a href="${offer.source}" target="_blank" rel="noreferrer">Source du contrat / barème ↗</a>`;
   }
 
@@ -341,6 +355,14 @@
   document.querySelectorAll('[data-return]').forEach(button => button.addEventListener('click', () => { $('child-return').value = button.dataset.return; calculate(); }));
   $('exit-at-18').addEventListener('click', () => { if ($('birth-date').value) $('child-exit').value = iso(anniversary(date($('birth-date').value), 18)); calculate(); });
   $('child-rows').addEventListener('click', e => { const button = e.target.closest('[data-child-select]'); if (button) { state.selected = button.dataset.childSelect; renderResults(); $('child-rows').querySelector(`[data-child-select="${state.selected}"]`).focus({ preventScroll: true }); } });
+  $('child-exit-chart').addEventListener('click', e => {
+    const button = e.target.closest('[data-child-bar]');
+    if (!button) return;
+    state.selected = button.dataset.childBar;
+    renderResults();
+    $('child-exit-chart').querySelector(`[data-child-bar="${state.selected}"]`).focus({ preventScroll: true });
+  });
+  document.querySelector('a[href="#donation"]').addEventListener('click', () => { $('donation').open = true; });
   $('child-legend').addEventListener('click', e => {
     const button = e.target.closest('[data-child-curve]');
     if (!button) return;

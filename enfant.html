@@ -17,10 +17,10 @@
       <nav class="tool-nav" aria-label="Simulateurs BigShort"><a href="./">PER vs PEA</a><a href="enfant.html" aria-current="page">AV vs CTO · enfant</a></nav>
       <div class="eyebrow">Épargne enfant · frais et fiscalité 2026</div>
       <h1>AV ou CTO : quel capital pour son départ dans la vie ?</h1>
-      <p class="lede">Même budget, exposition MSCI World capitalisante, frais explicites. Comparez Linxea Spirit 2, Lucya Cardif et les CTO Fortuneo et BoursoBank, sans confondre épargne au nom de l’enfant et transmission d’un compte parental.</p>
+      <p class="lede">Même budget, ETF Monde : comparez le capital disponible après frais et impôts.</p>
     </header>
 
-    <div class="warning" role="note"><strong>Scénario calculé : comptes au nom de l’enfant.</strong> L’argent lui appartient dès les versements ; il en dispose en principe à sa majorité. Une donation ultérieure de titres détenus par un parent est un autre scénario, expliqué <a href="#donation">plus bas</a>, sans purge des plus-values dans les résultats ci-dessous.</div>
+    <p class="scenario-note">Comptes au nom de l’enfant · donation d’un CTO parental <a href="#donation">expliquée séparément</a>, non simulée.</p>
 
     <section class="card" aria-labelledby="parameters-title">
       <h2 id="parameters-title">Votre projet</h2>
@@ -62,27 +62,39 @@
       </section>
       <div id="eligibility-note" class="warning" role="note"></div>
 
+      <section class="card exit-section" aria-labelledby="child-exit-title">
+        <h2 id="child-exit-title">Capital net à la sortie</h2>
+        <p id="child-exit-caption" class="help"></p>
+        <div id="child-exit-chart" class="exit-chart" aria-label="Comparaison des capitaux nets à la sortie"></div>
+        <p class="help">Après tous les frais modélisés et impôts. Cliquez sur une offre pour voir sa décomposition.</p>
+      </section>
+
       <section class="card" aria-labelledby="comparison-title">
         <h2 id="comparison-title">Comparaison détaillée</h2>
-        <p class="help">Classement par capital après vente totale, frais et impôts. Cliquez sur une offre pour consulter tous ses frais et le support retenu.</p>
         <div class="table-wrap">
           <table id="comparison"><thead><tr><th scope="col">Offre / éligibilité</th><th scope="col">ETF / an</th><th scope="col">Contrat / an</th><th scope="col">Versements</th><th scope="col">Frais cumulés</th><th scope="col">Impôt + PS</th><th scope="col">Capital net</th><th scope="col">Gain net</th></tr></thead><tbody id="child-rows"></tbody></table>
         </div>
-        <p class="help">Les frais cumulés sont des coûts prélevés ou intégrés au fonds, pas leur manque à gagner futur. Le gain net = capital net − budget versé. Pas de droits de donation déduits : les versements au nom de l’enfant peuvent eux-mêmes relever d’une donation ou d’un présent d’usage, selon la situation.</p>
+        <p class="help">Gain net = capital net − versements. Frais cumulés hors manque à gagner. Droits de donation non simulés.</p>
       </section>
 
       <section class="card" aria-labelledby="child-detail-title">
         <h2 id="child-detail-title">Fiche descriptive</h2>
         <p id="child-fund" class="fund-line"></p>
-        <div class="table-wrap"><table class="fee-table"><thead><tr><th scope="col">Poste de frais</th><th scope="col">Tarif retenu</th><th scope="col">Cumul simulé</th></tr></thead><tbody id="child-fee-rows"></tbody></table></div>
-        <div id="child-tax-detail" class="fee-grid" style="margin-top:18px"></div>
-        <p id="child-offer-note" class="help"></p>
-        <p class="help">Modèle sans gestion pilotée, options de garantie décès payantes, change, ordres téléphoniques, transfert ni service facultatif. Sur CTO : fractions de parts théoriques après respect du minimum d’ordre ; le cours et l’achat en parts entières ne sont pas simulés. Le spread et les coûts exceptionnels ne sont pas connus à l’avance : le supplément d’exécution ci-dessus permet de tester leur impact. Un ETF Monde reste exposé au risque de change même s’il est acheté en euros.</p>
+        <div id="child-tax-detail" class="fee-grid"></div>
+        <details id="child-fees-detail">
+          <summary>Tous les frais, le support et les règles appliquées</summary>
+          <div class="table-wrap"><table class="fee-table"><thead><tr><th scope="col">Poste de frais</th><th scope="col">Tarif retenu</th><th scope="col">Cumul simulé</th></tr></thead><tbody id="child-fee-rows"></tbody></table></div>
+          <div id="child-tax-extra" class="fee-grid"></div>
+          <p id="child-fund-note" class="help"></p>
+          <p id="child-offer-note" class="help"></p>
+          <p class="help">Modèle sans gestion pilotée, options de garantie décès payantes, change, ordres téléphoniques, transfert ni service facultatif. Sur CTO : fractions de parts théoriques après respect du minimum d’ordre ; le cours et l’achat en parts entières ne sont pas simulés. Le spread et les coûts exceptionnels ne sont pas connus à l’avance : le supplément d’exécution ci-dessus permet de tester leur impact. Un ETF Monde reste exposé au risque de change même s’il est acheté en euros.</p>
+        </details>
       </section>
     </div>
 
-    <section class="card reading" aria-labelledby="tax-guide-title">
-      <h2 id="tax-guide-title">Les avantages fiscaux, sans raccourcis</h2>
+    <details class="card reading compact-disclosure">
+      <summary id="tax-guide-title">Comprendre les avantages fiscaux AV / CTO</summary>
+      <div class="disclosure-content">
       <div class="two-col">
         <article>
           <h3>Assurance-vie au nom de l’enfant</h3>
@@ -108,10 +120,12 @@
         <p>Ils concernent le décès de l’assuré, pas le retrait par l’enfant à ses 18 ans. Pour une AV souscrite par un parent avec l’enfant bénéficiaire, les versements avant 70 ans peuvent bénéficier d’un abattement de 152 500 € par bénéficiaire, sous conditions ; les gains non encore soumis aux prélèvements sociaux n’en sont pas dispensés. Pour les versements après 70 ans, le régime change : abattement global de 30 500 € sur les primes concernées, puis droits de succession, avec en principe exonération des gains de ces droits. <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F15274" target="_blank" rel="noreferrer">Régime au décès ↗</a></p>
         <p>Ces mécanismes ne sont pas appliqués au classement : le contrat simulé appartient déjà à l’enfant. Un CTO transmis au décès relève de la succession ordinaire et d’une nouvelle valeur d’acquisition des titres. Il ne faut pas comparer uniquement les abattements sans tenir compte de tout le patrimoine, des frais et du lien de parenté.</p>
       </details>
-    </section>
+      </div>
+    </details>
 
-    <section id="donation" class="card reading" aria-labelledby="donation-title">
-      <h2 id="donation-title">Autre stratégie : donner les titres d’un CTO parental</h2>
+    <details id="donation" class="card reading compact-disclosure">
+      <summary id="donation-title">Donation d’un CTO parental : avantages et limites</summary>
+      <div class="disclosure-content">
       <p>Le parent investit sur son propre CTO, puis donne les titres — sans les vendre d’abord. L’enfant reçoit leur propriété. Pour une revente ultérieure, son prix d’acquisition fiscal est en principe la valeur retenue lors de la donation : la plus-value antérieure est ainsi « purgée ». Cela suppose une donation réelle et correctement déclarée, sans réappropriation des fonds par le parent.</p>
       <div class="flow" aria-label="Étapes de la donation de titres"><span>CTO du parent<br>plus-value latente</span><b aria-hidden="true">→</b><span>Donation des titres<br>valeur déclarée au jour du don</span><b aria-hidden="true">→</b><span>Revente par l’enfant<br>nouvelle base d’acquisition</span></div>
       <div class="two-col">
@@ -119,15 +133,18 @@
         <article><h3>Les limites à ne pas oublier</h3><p>L’abattement de 100 000 € s’apprécie par parent et par enfant sur 15 ans, en tenant compte des dons précédents. Au-delà, des droits progressifs peuvent être dus sur la valeur transmise, pas seulement sur les gains. La purge de plus-value n’est pas elle-même limitée à 100 000 €.</p><p>Le dispositif distinct de 31 865 € vise les dons de sommes d’argent sous conditions : il ne s’ajoute pas automatiquement à un don de titres. Vendre avant de donner le cash déclenche la plus-value chez le parent. Frais de transfert, formalités, situation familiale et donation-cession méritent une vérification professionnelle.</p></article>
       </div>
       <p class="help">Hors simulation et hors classement : aucune économie de donation n’est ajoutée au capital des CTO enfant. Sources : <a href="https://www.impots.gouv.fr/particulier/les-cessions-mobilieres" target="_blank" rel="noreferrer">valeur d’acquisition des titres donnés</a> · <a href="https://www.impots.gouv.fr/particulier/questions/que-puis-je-donner-mes-enfants-petits-enfants-sans-avoir-payer-de-droits" target="_blank" rel="noreferrer">abattements de donation</a> · <a href="https://www.impots.gouv.fr/particulier/dons-exoneres" target="_blank" rel="noreferrer">conditions des dons d’argent</a>.</p>
-    </section>
+      </div>
+    </details>
 
-    <section class="card reading" aria-labelledby="method-title">
-      <h2 id="method-title">Ce que compare réellement BigShort</h2>
+    <details class="card reading compact-disclosure">
+      <summary id="method-title">Méthode, hypothèses et post d’inspiration</summary>
+      <div class="disclosure-content">
       <p>Une exposition actions de pays développés, sans levier, avec le même rendement avant frais. Versement initial aujourd’hui, puis versements en fin de mois, capitalisation proratisée entre les dates, vente totale à la sortie. Les liquidités en attente d’un minimum de versement restent non rémunérées. La fiscalité 2026 est maintenue sur tout l’horizon : elle pourra évoluer.</p>
       <p>Les fonds ne sont pas supposés identiques en réplication ni en écart de suivi. BNP Easy World (0,05 % de frais courants) est référencé dans le catalogue Spirica consulté ; Amundi Core World (0,12 %) est retenu pour Lucya et les CTO dont le référencement est documenté. BigShort ne prétend pas avoir vérifié tous les ETF de chaque plateforme. Les transactions internes estimées s’ajoutent ici aux frais courants : elles ne sont pas une seconde facturation du courtier.</p>
       <p>Pas d’arbitrage, de liquidation forcée d’ETF, de retraits étalés sur plusieurs années, de succession ou de donation simulés. Ces événements peuvent modifier le résultat : les frais annuels de l’AV pèsent dans la durée, alors que ses arbitrages internes et l’étalement des rachats peuvent réduire certaines frictions fiscales.</p>
       <p class="help">Lecture d’inspiration : <a href="https://web.archive.org/web/20260201173819/https://www.reddit.com/r/vosfinances/comments/1q3mszi/cto_vs_assurance_vie_quelle_est_la_meilleure/" target="_blank" rel="noreferrer">« CTO vs assurance vie, quelle est la meilleure enveloppe ? » — archive Reddit du 1er février 2026 ↗</a>. Le post examine notamment frais composés, retraits, arbitrages et transmission d’un patrimoine parental. Ce n’est pas le même scénario que des comptes au nom de l’enfant ; ses conclusions ne sont pas reprises comme une garantie ni comme une source juridique.</p>
-    </section>
+      </div>
+    </details>
 
     <section id="child-history-section" class="card" aria-labelledby="child-history-title">
       <h2 id="child-history-title">Évolution du capital net année par année</h2>
@@ -137,18 +154,21 @@
         <button type="button" id="child-best-curves">Meilleure AV + meilleur CTO</button>
         <button type="button" id="child-all-curves">Toutes les courbes</button>
       </div>
-      <p class="help">Par défaut, seules la meilleure AV et le meilleur CTO éligibles sont sélectionnés. Cliquez sur une légende pour ajouter/retirer une courbe. Survolez ou touchez le graphique pour lire les montants.</p>
+      <p class="help">Cliquez sur une légende pour ajouter/retirer une courbe. Survolez ou touchez le graphique pour lire son montant.</p>
       <div class="graph-frame" id="child-frame"><div id="child-graph" class="graph"></div><div id="child-tooltip" class="tooltip" role="tooltip" hidden></div></div>
       <p id="child-empty" class="empty" hidden>Aucune courbe sélectionnée. Cliquez sur une légende pour l’afficher.</p>
       <div class="inspector"><label for="child-year">Année consultée — <span id="child-year-date"></span></label><input type="range" id="child-year" min="0" max="18" step="1" value="18"></div>
       <div id="child-legend" class="legend" role="group" aria-label="Courbes et montants à l’année sélectionnée"></div>
-      <p class="help">Chaque point est une liquidation théorique à cette date, avec sa durée fiscale et un seul abattement AV disponible. Aucun impôt annuel fictif n’est retiré des années suivantes. Les lignes relient ces points, elles ne prédisent pas les fluctuations du marché.</p>
+      <p class="help">Capital après une sortie théorique à chaque date — sans retraits intermédiaires.</p>
     </section>
 
     <footer>
-      <p><strong>Simulation indicative, pas un conseil financier ou fiscal.</strong> Capital non garanti. Données contrôlées le 24 octobre 2026, tarifs standards sans promotion. Les frais non chiffrables ou exclus sont explicités dans la fiche descriptive.</p>
+      <p><strong>Simulation indicative, pas un conseil financier ou fiscal.</strong> Capital non garanti.</p>
+      <details><summary>Sources et date des données</summary>
+      <p>Données contrôlées le 24 octobre 2026, tarifs standards sans promotion. Frais exclus et limites dans la fiche descriptive.</p>
       <p>Contrats et éligibilité : <a href="https://www.linxea.com/assurance-vie/linxea-spirit-2/" target="_blank" rel="noreferrer">Linxea Spirit 2</a> · <a href="https://lucya.com/assurance-vie/lucya-cardif/" target="_blank" rel="noreferrer">Lucya Cardif</a> · <a href="https://lucya.com/actualites/nos-travaux-dete-au-service-de-votre-satisfaction/" target="_blank" rel="noreferrer">Lucya pour mineur</a> · <a href="https://www.fortuneo.fr/faq/qui-peut-ouvrir-un-compte-bourse" target="_blank" rel="noreferrer">CTO Fortuneo mineur</a> · <a href="https://www.boursobank.com/bourse/cto-compte-titres-ordinaire" target="_blank" rel="noreferrer">CTO BoursoBank</a>.</p>
       <p><a href="https://forum.linxea.com/t/nouveautes-spirit-2-129-nouveaux-etf-et-baisse-des-frais-de-transaction-a-0-06/261537" target="_blank" rel="noreferrer">Linxea : transactions ETF 0,06 %</a> · <a href="https://lucya.com/app/uploads/2026/02/notice-lucya-cardif.pdf" target="_blank" rel="noreferrer">Notice Lucya (art. 11 : rachat)</a> · <a href="https://www.fortuneo.fr/datas/files/tarifs_fortuneo.pdf" target="_blank" rel="noreferrer">Tarifs Fortuneo</a> · <a href="https://www.boursobank.com/content/brochure_tarifaire/boursorama_bt.pdf" target="_blank" rel="noreferrer">Tarifs BoursoBank</a>.</p>
+      </details>
     </footer>
   </main>
 </body>
