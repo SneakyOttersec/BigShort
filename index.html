@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BigShort — PER vs PEA</title>
-  <meta name="description" content="BigShort : comparez PER, PEA et CTO, ou assurance-vie et CTO pour un enfant, après frais et fiscalité.">
+  <title>BigShort — PER, PEA, AV et CTO</title>
+  <meta name="description" content="BigShort : comparez PER, PEA, assurance-vie Linxea Spirit 2 et CTO, ou AV et CTO pour un enfant, après frais et fiscalité.">
   <meta name="theme-color" content="#fafafa">
   <link rel="icon" href="data:,">
   <style>
@@ -124,12 +124,13 @@
     .bar[data-product="PER"] { background: var(--brand); }
     .bar[data-product="PEA"] { background: var(--blue); }
     .bar[data-product="CTO"] { background: var(--gold); }
+    .bar[data-product="AV"] { background: #166c79; }
     .bar-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; }
     .selection { margin: 14px 0; padding: 20px; }
     .selection-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
     .selection-actions { display: flex; flex-wrap: wrap; gap: 12px; }
     .selection-actions button { border: 0; padding: 5px 0; background: transparent; color: var(--brand-dark); }
-    .selection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .selection-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
     .selection fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
     .selection legend { padding: 0; margin-bottom: 4px; font-weight: 650; }
     .selection .check-option { margin: 0; min-height: 40px; }
@@ -173,6 +174,7 @@
     .badge.ok { background: var(--brand-soft); color: var(--brand-dark); }
     .fund-cell { max-width: 190px; }
     .fund-cell small { display: block; color: var(--muted); }
+    .fee-detail { display: block; max-width: 150px; color: var(--muted); font-size: .75rem; line-height: 1.5; }
     .fund-line { margin: 0 0 14px; color: var(--muted); }
     .fund-line a { color: var(--brand-dark); }
     .fee-note { margin: 14px 0 0; color: var(--muted); font-size: .82rem; }
@@ -193,6 +195,7 @@
     footer a { color: var(--brand-dark); }
 
     @media (max-width: 840px) {
+      .selection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .control-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
       .summary-grid { grid-template-columns: 1fr 1fr; }
       .best { grid-column: 1 / -1; }
@@ -220,9 +223,9 @@
   <main class="shell">
     <header>
       <nav class="site-nav" aria-label="Navigation du site"><a href="https://sneakyottersec.github.io/">Ottersec Blog</a><span>BigShort</span></nav>
-      <nav class="tool-nav" aria-label="Simulateurs BigShort"><a href="./" aria-current="page">PER vs PEA</a><a href="enfant.html">AV vs CTO · enfant</a></nav>
+      <nav class="tool-nav" aria-label="Simulateurs BigShort"><a href="./" aria-current="page">PER vs PEA + AV</a><a href="enfant.html">AV vs CTO · enfant</a></nav>
       <div class="eyebrow">Simulation patrimoniale 2026</div>
-      <h1>PER, PEA ou CTO&nbsp;: comparez ce qu’il vous reste vraiment.</h1>
+      <h1>PER, PEA, AV ou CTO&nbsp;: comparez ce qu’il vous reste vraiment.</h1>
       <p class="lede">Même versement mensuel, avec un support Monde identifié dans chaque enveloppe. Chaque frais est séparé pour rendre la comparaison contrôlable. Sélection non exhaustive des supports disponibles.</p>
     </header>
 
@@ -263,7 +266,11 @@
         <div class="advanced">
           <label><span class="control-label"><span>Rendement brut annuel</span><strong id="return-output">7,00 %</strong></span><input id="gross-return" type="range" min="-10" max="15" step="0.25" value="7"></label>
           <label><span class="control-label"><span>Majoration de sécurité des frais</span><strong id="etf-output">+ 0,00 %</strong></span><input id="etf-fee" type="range" min="0" max="0.5" step="0.05" value="0"></label>
+          <label><span>Abattement AV disponible à la sortie (€)</span><input id="av-allowance" type="number" min="0" max="9200" step="any" value="4600" inputmode="decimal"></label>
+          <label><span>Autres primes AV avant 2017 (€)</span><input id="av-old-premiums" type="number" min="0" max="100000000" step="any" value="0" inputmode="decimal"></label>
+          <label><span>Autres primes AV depuis 2017 (€)</span><input id="av-other-premiums" type="number" min="0" max="100000000" step="any" value="0" inputmode="decimal"></label>
         </div>
+        <p class="control-help">AV : un seul abattement à la sortie totale, après 8 ans (4 600 € personne seule ou 9 200 € couple imposé ensemble, partagé entre contrats). Les autres primes sont les sommes non remboursées au 31 décembre précédant la sortie, supposées constantes pour les points annuels. La TMI de retraite ne s’applique pas à l’AV : taux forfaitaires retenus, sans option au barème.</p>
       </details>
       <p id="status" class="status" role="alert"></p>
     </section>
@@ -312,6 +319,7 @@
       <p><strong>Crédit Agricole Île-de-France Offre Bourse Intégral — PEA uniquement</strong> — droits de garde exonérés; service gratuit à partir de 12 ordres/an, sinon 96&nbsp;€; courtage&nbsp;: 0,48&nbsp;% jusqu’à 500&nbsp;€, 0,18&nbsp;% jusqu’à 1&nbsp;000&nbsp;€, puis 0,12&nbsp;%. Les éventuels frais de marché ne sont pas publiés à l’avance.</p>
       <p><strong>Linxea Spirit PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF 0,10&nbsp;% chacun; versement, arbitrage et sortie en capital 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
       <p><strong>Lucya Cardif PER</strong> — gestion libre 0,50&nbsp;%/an sur UC; investissement et désinvestissement d’ETF jusqu’à 0,10&nbsp;% chacun; versement et arbitrage 0&nbsp;€; transfert avant 5 ans jusqu’à 1&nbsp;%.</p>
+      <p><strong>Linxea Spirit 2 — assurance-vie</strong> — gestion libre 0,50&nbsp;%/an sur UC ; investissement et désinvestissement ETF 0,06&nbsp;% chacun ; entrée, versement et arbitrage en ligne hors frais ETF 0&nbsp;€. Le budget mensuel reste en cash non rémunéré jusqu’au minimum d’ouverture de 500&nbsp;€, puis jusqu’à 100&nbsp;€ pour les versements suivants. L’ancienneté fiscale commence au premier versement investi. BNP Easy MSCI World : 0,05&nbsp;% de frais courants + 0,05&nbsp;% de transactions internes annuelles estimées, intégrés au calcul.</p>
     </details>
 
     <section class="table-section card" aria-labelledby="table-title">
@@ -375,7 +383,7 @@
         <input id="history-year" type="range" min="0" max="1" step="1" value="1">
       </div>
       <p id="history-selection-note" class="summary-meta" aria-live="polite"></p>
-      <div class="history-legend-head"><p class="history-description">Cliquez sur une offre pour masquer ou réafficher sa courbe. Le tableau conserve sa sélection.</p><div class="selection-actions"><button type="button" id="history-best" aria-pressed="true">Meilleurs PEA / PER</button><button type="button" id="history-reset">Afficher toutes les courbes</button></div></div>
+      <div class="history-legend-head"><p class="history-description">Cliquez sur une offre pour masquer ou réafficher sa courbe. Le tableau conserve sa sélection.</p><div class="selection-actions"><button type="button" id="history-best" aria-pressed="true">Meilleurs PEA / PER / AV</button><button type="button" id="history-reset">Afficher toutes les courbes</button></div></div>
       <div id="history-values" class="history-values" role="group" aria-label="Afficher ou masquer les courbes du graphique"></div>
       <p id="history-overlap" class="history-description" hidden>Des offres ont des montants identiques sur cette période : leurs courbes se superposent.</p>
       <p class="fee-note">Capital net théorique après frais et fiscalité, avec la TMI de sortie retenue pour le PER. La disponibilité du PER avant la retraite reste soumise aux conditions de déblocage.</p>
@@ -384,6 +392,7 @@
     <footer>
       <p><strong>Simulation indicative, pas un conseil financier.</strong> Les performances ne sont pas garanties. Les tarifs standards et la fiscalité sont modélisés à la date du 23 octobre 2026, sans promotion, frais de support exceptionnels ni option au barème.</p>
       <p>Sources&nbsp;: <a href="https://www.boursobank.com/content/brochure_tarifaire/boursorama_bt.pdf" target="_blank" rel="noreferrer">BoursoBank</a> · <a href="https://www.fortuneo.fr/datas/files/tarifs_fortuneo.pdf" target="_blank" rel="noreferrer">Fortuneo</a> · <a href="https://ca-paris.credit-agricole.fr/tarif/2026/CADIF_tarif2026_PART/conditions_tarifaires_particuliers_caidf_04_2026.pdf" target="_blank" rel="noreferrer">Crédit Agricole Île-de-France</a> · <a href="https://www.linxea.com/per/linxea-spirit-per/" target="_blank" rel="noreferrer">Linxea Spirit PER</a> · <a href="https://www.assurancevie.com/nos-contrats/lucya-cardif-per/" target="_blank" rel="noreferrer">Lucya Cardif PER</a> · <a href="https://www.service-public.fr/particuliers/vosdroits/F22449" target="_blank" rel="noreferrer">fiscalité PEA</a> · <a href="https://www.service-public.fr/particuliers/vosdroits/F36526/0?idFicheParent=F34982" target="_blank" rel="noreferrer">fiscalité PER</a>.</p>
+      <p>AV ajoutée et vérifiée le 24 octobre 2026 : <a href="https://www.linxea.com/assurance-vie/linxea-spirit-2/" target="_blank" rel="noreferrer">Linxea Spirit 2 — frais et minima</a> · <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F22414" target="_blank" rel="noreferrer">fiscalité des rachats AV</a> · <a href="https://www.bnpparibas-am.com/en-nl/fundsheet/equity/bnp-paribas-easy-msci-world-ucits-etf-ucits-etf-eur-c-ie000a0gh076/" target="_blank" rel="noreferrer">frais BNP Easy World</a>. Fiscalité 2026 maintenue sur toute la simulation.</p>
     </footer>
   </main>
 
@@ -391,12 +400,12 @@
     (() => {
       'use strict';
 
-      const TAX = Object.freeze({ social: 0.186, incomeCapital: 0.128, pfu: 0.314, peaCap: 150000 });
+      const TAX = Object.freeze({ social: 0.186, incomeCapital: 0.128, pfu: 0.314, peaCap: 150000, avSocial: .172, avReduced: .075, avThreshold: 150000, avChecked: '2026-10-24' });
       const BANKS = Object.freeze({
         bourso: { name: 'BoursoBank', plan: 'Découverte', min: { PER: 50, PEA: 100, CTO: 100 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
         fortuneo: { name: 'Fortuneo', plan: 'Starter', min: { PER: 50, PEA: 400, CTO: 0 }, wrapper: { PER: .005, PEA: 0, CTO: 0 } },
         ca: { name: 'Crédit Agricole IDF', plan: 'Offre Bourse Intégral', min: { PEA: 0 }, wrapper: { PEA: 0 } },
-        linxea: { name: 'Linxea', plan: 'Spirit PER', min: { PER: 50 }, wrapper: { PER: .005 } },
+        linxea: { name: 'Linxea', plan: 'Spirit PER', min: { PER: 50, AV: 100 }, initial: { AV: 500 }, wrapper: { PER: .005, AV: .005 } },
         lucya: { name: 'Lucya', plan: 'Cardif PER', min: { PER: 50 }, wrapper: { PER: .005 } }
       });
       const ETFS = Object.freeze({
@@ -408,13 +417,14 @@
         'PER-bourso': { name: 'Bourso Invest – Bourso Monde', short: 'Bourso Monde', isin: 'FR001400RWK6', fee: .0059, kind: 'Fonds nourricier d’ETF', status: 'Support Monde GL le moins chargé repéré', verified: true, source: 'https://www.oradeavie.fr/fileadmin/user_upload/oradeavie/documents_de_performance/1636-MATLA-PERFORMANCE-202603.pdf' },
         'PER-fortuneo': { name: 'Amundi MSCI World Swap II UCITS ETF Dist', short: 'Amundi World II', isin: 'FR0010315770', fee: .003, kind: 'ETF MSCI World', status: 'Moins cher du catalogue PER public vérifié', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/kid-priips/FR0010315770/FRA/FRA' },
         'PER-linxea': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Support référencé · sélection non exhaustive', verified: true, source: 'https://www.amundietf.fr/pdfDocuments/monthly-factsheet/IE000BI8OT95/FRA/FRA/RETAIL/ETF' },
-        'PER-lucya': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Support référencé · sélection non exhaustive', verified: true, source: 'https://app.lucya.com/asv/nos-fonds/opcvm/IE000BI8OT95/0P0001S8XB' }
+        'PER-lucya': { name: 'Amundi Core MSCI World UCITS ETF Acc', short: 'Amundi Core World', isin: 'IE000BI8OT95', fee: .0012, kind: 'ETF MSCI World', status: 'Support référencé · sélection non exhaustive', verified: true, source: 'https://app.lucya.com/asv/nos-fonds/opcvm/IE000BI8OT95/0P0001S8XB' },
+        'AV-linxea': { name: 'BNP Paribas Easy MSCI World UCITS ETF EUR C', short: 'BNP Easy World', isin: 'IE000A0GH076', fee: .0005, internalFee: .0005, kind: 'ETF MSCI World capitalisant', status: 'Référencé Spirica · frais émetteur vérifiés', verified: true, source: 'https://docfinder.bnpparibas-am.com/api/files/1c0c2d9e-492e-48f6-b79c-bf5fbed21927/512', availability: 'https://support.linxea.com/fr/articles/746251-quels-sont-les-etf-disponibles-sur-les-contrats-spirica', costsSource: 'https://www.bnpparibas-am.com/en-nl/fundsheet/equity/bnp-paribas-easy-msci-world-ucits-etf-ucits-etf-eur-c-ie000a0gh076/' }
       });
-      const PRODUCTS = ['PER', 'PEA', 'CTO'];
+      const PRODUCTS = ['PER', 'PEA', 'CTO', 'AV'];
       const VARIANTS = Object.freeze([
-        ...['bourso', 'fortuneo'].flatMap(bankKey => PRODUCTS.map(product => ({ bankKey, product }))),
+        ...['bourso', 'fortuneo'].flatMap(bankKey => ['PER', 'PEA', 'CTO'].map(product => ({ bankKey, product }))),
         { bankKey: 'ca', product: 'PEA' },
-        { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }
+        { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }, { bankKey: 'linxea', product: 'AV' }
       ]);
       const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null, historyHidden: new Set(), historyAutoBest: true, historyView: 'capital', historyWindow: 5, historyScale: 'auto', historyPlot: null, historyTooltipPinned: false };
       const $ = id => document.getElementById(id);
@@ -422,7 +432,7 @@
       const fmtExact = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtPct = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-      const seriesColors = { 'PER-bourso': '#cc2a41', 'PER-fortuneo': '#b25625', 'PER-linxea': '#8b4278', 'PER-lucya': '#3e6fa8', 'PEA-bourso': '#567c77', 'PEA-fortuneo': '#346b98', 'PEA-ca': '#327058', 'CTO-bourso': '#6d648b', 'CTO-fortuneo': '#956b0d' };
+      const seriesColors = { 'PER-bourso': '#cc2a41', 'PER-fortuneo': '#b25625', 'PER-linxea': '#8b4278', 'PER-lucya': '#3e6fa8', 'PEA-bourso': '#567c77', 'PEA-fortuneo': '#346b98', 'PEA-ca': '#327058', 'CTO-bourso': '#6d648b', 'CTO-fortuneo': '#956b0d', 'AV-linxea': '#166c79' };
       const bankDashes = { bourso: '', fortuneo: '8 4', ca: '2 4', linxea: '12 3 2 3', lucya: '3 3 10 3' };
 
       function seriesSwatch(product, bankKey) {
@@ -468,7 +478,7 @@
       }
 
       function selectBestHistoryOffers() {
-        const bestKeys = ['PEA', 'PER'].map(product => state.results
+        const bestKeys = ['PEA', 'PER', 'AV'].map(product => state.results
           .filter(r => r.product === product && state.visible.has(r.key))
           .sort((a, b) => b.netCapital - a.netCapital)[0]?.key).filter(Boolean);
         state.historyHidden = new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`).filter(key => !bestKeys.includes(key)));
@@ -571,7 +581,7 @@
         const empty = !state.history || !rows.length;
         $('history-best').setAttribute('aria-pressed', String(state.historyAutoBest));
         $('history-selection-note').textContent = state.historyAutoBest
-          ? 'Sélection automatique : meilleur PEA et meilleur PER par capital net à la sortie. En cas d’égalité, une seule offre est retenue.'
+          ? 'Sélection automatique : meilleurs PEA, PER et AV par capital net à la sortie. En cas d’égalité, une seule offre par catégorie est retenue.'
           : `Sélection personnalisée : ${rows.length} courbe${rows.length > 1 ? 's' : ''} affichée${rows.length > 1 ? 's' : ''}.`;
         document.querySelectorAll('[data-history-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.historyView === state.historyView)));
         $('history-view-note').textContent = gapView
@@ -655,6 +665,7 @@
 
       function brokerage(bankKey, product, amount, side = 'buy') {
         if (amount <= 0) return 0;
+        if (bankKey === 'linxea' && product === 'AV') return amount * .0006;
         if ((bankKey === 'linxea' || bankKey === 'lucya') && product === 'PER') return amount * .001;
         if (bankKey === 'bourso') {
           if (product === 'PER') return 0;
@@ -685,15 +696,33 @@
         result.serviceFees += fromCash + fromBalance;
       }
 
-      function simulate({ bankKey, product, monthly, dates, exit = dates.at(-1), grossAnnual, feeBuffer = 0, tmiNow, tmiRetire, taxMode, perExitMode = 'retirement', tmiHome = tmiNow }) {
+      function taxAV(gains, opened, exit, allowance = 4600, premiumsPrior = 0, oldPremiums = 0, otherPremiums = 0) {
+        const gain = Math.max(0, gains);
+        if (!opened) return { incomeTax: 0, socialTax: 0, allowanceUsed: 0, afterEight: false };
+        const eighth = new Date(opened.getFullYear() + 8, opened.getMonth(), Math.min(opened.getDate(), lastDay(opened.getFullYear() + 8, opened.getMonth()).getDate()), 12);
+        const afterEight = exit >= eighth;
+        const allowanceUsed = afterEight ? Math.min(gain, allowance) : 0;
+        let incomeTax = gain * TAX.incomeCapital;
+        if (afterEight) {
+          const recent = premiumsPrior + otherPremiums;
+          const fraction = recent + oldPremiums <= TAX.avThreshold ? 1 : Math.max(0, Math.min(1, (TAX.avThreshold - oldPremiums) / Math.max(1, recent)));
+          const lowGain = gain * fraction;
+          incomeTax = Math.max(0, lowGain - allowanceUsed) * TAX.avReduced
+            + Math.max(0, gain - lowGain - Math.max(0, allowanceUsed - lowGain)) * TAX.incomeCapital;
+        }
+        return { incomeTax, socialTax: gain * TAX.avSocial, allowanceUsed, afterEight };
+      }
+
+      function simulate({ bankKey, product, monthly, dates, exit = dates.at(-1), grossAnnual, feeBuffer = 0, tmiNow, tmiRetire, taxMode, perExitMode = 'retirement', tmiHome = tmiNow, avAllowance = 4600, avOldPremiums = 0, avOtherPremiums = 0 }) {
         const bank = BANKS[bankKey];
         const etf = ETFS[`${product}-${bankKey}`];
         const monthlyGross = Math.pow(1 + grossAnnual, 1 / 12) - 1;
         const wrapperMonthly = bank.wrapper[product] / 12;
         const etfAnnual = etf.fee + feeBuffer;
         const etfMonthly = etfAnnual / 12;
+        const internalAnnual = etf.internalFee || 0;
         const perExitTaxRate = perExitMode === 'home' ? tmiHome : tmiRetire;
-        const r = { key: `${product}-${bankKey}`, bankKey, bank: bank.name, plan: bank.plan, product, etf, etfAnnual, wrapperAnnual: bank.wrapper[product], balance: 0, cash: 0, outsideCash: 0, contributions: 0, deductibleContributions: 0, baseContributions: 0, fees: 0, serviceFees: 0, orderFees: 0, buyFees: 0, sellFees: 0, custodyFees: 0, wrapperFees: 0, etfFees: 0, taxSaving: 0, incomeTax: 0, socialTax: 0, tax: 0, netCapital: 0, realEffort: 0, netGain: 0, capReached: false, months: dates.length, ordersByYear: {} };
+        const r = { key: `${product}-${bankKey}`, bankKey, bank: bank.name, plan: product === 'AV' ? 'Spirit 2 · gestion libre' : bank.plan, product, etf, etfAnnual, internalAnnual, wrapperAnnual: bank.wrapper[product], balance: 0, cash: 0, outsideCash: 0, contributions: 0, deductibleContributions: 0, baseContributions: 0, fees: 0, serviceFees: 0, orderFees: 0, buyFees: 0, sellFees: 0, custodyFees: 0, wrapperFees: 0, etfFees: 0, internalFees: 0, taxSaving: 0, incomeTax: 0, socialTax: 0, tax: 0, netCapital: 0, realEffort: 0, netGain: 0, capReached: false, months: dates.length, ordersByYear: {}, avOpened: null, avPremiumsPrior: 0, avAllowanceUsed: 0 };
         let currentYear = dates.length ? dates[0].getFullYear() : new Date().getFullYear();
 
         dates.forEach((date, index) => {
@@ -705,6 +734,8 @@
             r.balance *= 1 + monthlyGross;
             const etfCost = Math.max(0, r.balance * etfMonthly);
             r.balance -= etfCost; r.fees += etfCost; r.etfFees += etfCost;
+            const internalCost = r.balance * internalAnnual / 12;
+            r.balance -= internalCost; r.fees += internalCost; r.internalFees += internalCost;
             const wrapperCost = Math.max(0, r.balance * wrapperMonthly);
             r.balance -= wrapperCost; r.fees += wrapperCost; r.wrapperFees += wrapperCost;
           }
@@ -721,7 +752,7 @@
             if (deposit > available) { r.outsideCash += deposit - available; deposit = available; r.capReached = true; }
           }
           r.cash += deposit;
-          const minOrder = bank.min[product];
+          const minOrder = product === 'AV' && !r.avOpened ? bank.initial.AV : bank.min[product];
           if (r.cash >= minOrder && r.cash > 0) {
             const grossOrder = r.cash;
             const fee = brokerage(bankKey, product, grossOrder, 'buy');
@@ -730,6 +761,10 @@
               r.balance += netOrder; r.cash = 0; r.contributions += grossOrder; r.fees += fee; r.orderFees += fee;
               r.buyFees += fee;
               if (product === 'PER') r.deductibleContributions += grossOrder;
+              if (product === 'AV') {
+                if (!r.avOpened) r.avOpened = new Date(date);
+                if (date.getFullYear() < exit.getFullYear()) r.avPremiumsPrior += grossOrder;
+              }
               r.ordersByYear[date.getFullYear()] = (r.ordersByYear[date.getFullYear()] || 0) + 1;
             }
           }
@@ -757,6 +792,13 @@
           r.incomeTax = r.deductibleContributions * perExitTaxRate + gains * TAX.incomeCapital;
           r.socialTax = gains * TAX.social;
         }
+        if (product === 'AV') {
+          const avTax = taxAV(gains, r.avOpened, exit, avAllowance, r.avPremiumsPrior, avOldPremiums, avOtherPremiums);
+          r.incomeTax = avTax.incomeTax;
+          r.socialTax = avTax.socialTax;
+          r.avAllowanceUsed = avTax.allowanceUsed;
+          r.avAfterEight = avTax.afterEight;
+        }
         r.incomeTax = Math.min(r.balance, r.incomeTax);
         r.socialTax = Math.min(Math.max(0, r.balance - r.incomeTax), r.socialTax);
         r.tax = r.incomeTax + r.socialTax;
@@ -780,12 +822,16 @@
         const monthly = Number($('monthly').value);
         const grossAnnual = Number($('gross-return').value) / 100;
         const feeBuffer = Number($('etf-fee').value) / 100;
+        const avAllowance = Number($('av-allowance').value);
+        const avOldPremiums = Number($('av-old-premiums').value);
+        const avOtherPremiums = Number($('av-other-premiums').value);
         const now = new Date();
         $('return-output').textContent = fmtPct.format(grossAnnual);
         $('etf-output').textContent = `+ ${fmtPct.format(feeBuffer)}`;
         if (!Number.isFinite(monthly) || monthly < 10) return { error: 'Indiquez une épargne mensuelle d’au moins 10 €.' };
         if (!Number.isFinite(exit.getTime()) || exit <= now) return { error: 'Choisissez une date de sortie future.' };
-        return { now, exit, monthly, grossAnnual, feeBuffer, tmiNow: Number($('tmi-now').value) / 100, tmiRetire: Number($('tmi-retire').value) / 100, perExitMode: homePurchase ? 'home' : 'retirement', tmiHome: Number($('tmi-rp').value) / 100, dates: monthlyDates(now, exit) };
+        if (['av-allowance', 'av-old-premiums', 'av-other-premiums'].some(id => !$(id).value || !$(id).checkValidity())) return { error: 'Vérifiez l’abattement AV (0 à 9 200 €) et les autres primes (montants positifs ou nuls).' };
+        return { now, exit, monthly, grossAnnual, feeBuffer, avAllowance, avOldPremiums, avOtherPremiums, tmiNow: Number($('tmi-now').value) / 100, tmiRetire: Number($('tmi-retire').value) / 100, perExitMode: homePurchase ? 'home' : 'retirement', tmiHome: Number($('tmi-rp').value) / 100, dates: monthlyDates(now, exit) };
       }
 
       function calculate() {
@@ -835,20 +881,24 @@
         const max = Math.max(...rows.map(r => r.netCapital), 1);
         $('chart').innerHTML = byCapital.map(r => `<div class="bar-row"><button type="button" class="bar-label" data-select="${r.key}">${r.product} · ${r.bank}</button><div class="track" aria-hidden="true"><div class="bar" data-product="${r.product}" style="width:${(r.netCapital/max*100).toFixed(2)}%"></div></div><div class="bar-value">${fmt.format(r.netCapital)}</div></div>`).join('');
 
-        $('results-body').innerHTML = rows.map(r => `<tr data-select="${r.key}" tabindex="0" class="${r.key === state.selected ? 'selected-row' : ''}" aria-selected="${r.key === state.selected}"><td><strong>${r.product}</strong>${r.capReached ? '<span class="badge">plafond atteint</span>' : ''}</td><td>${r.bank}</td><td class="fund-cell">${r.etf.short}<small>${r.etf.isin}</small></td><td>${fmtPct.format(r.etfAnnual)}</td><td>${fmtPct.format(r.wrapperAnnual)}</td><td>${fmt.format(r.contributions)}</td><td>${fmt.format(r.fees)}</td><td>${fmt.format(r.tax)}</td><td>${r.product === 'PER' ? fmt.format(r.taxSaving) : '—'}</td><td><strong>${fmt.format(r.netCapital)}</strong></td><td>${fmt.format(r.realEffort)}</td><td>${fmt.format(r.netGain)}</td></tr>`).join('');
+        $('results-body').innerHTML = rows.map(r => `<tr data-select="${r.key}" tabindex="0" class="${r.key === state.selected ? 'selected-row' : ''}" aria-selected="${r.key === state.selected}"><td><strong>${r.product}</strong>${r.capReached ? '<span class="badge">plafond atteint</span>' : ''}${r.product === 'AV' && !r.avOpened ? '<span class="badge">ouverture en attente</span>' : ''}</td><td>${r.bank}${r.product === 'AV' ? '<small class="fee-detail">Spirit 2</small>' : ''}</td><td class="fund-cell">${r.etf.short}<small>${r.etf.isin}</small></td><td>${fmtPct.format(r.etfAnnual)}${r.internalAnnual ? `<small class="fee-detail">+ ${fmtPct.format(r.internalAnnual)} transactions internes estimées</small>` : ''}</td><td>${fmtPct.format(r.wrapperAnnual)}</td><td>${fmt.format(r.contributions)}</td><td>${fmt.format(r.fees)}</td><td>${fmt.format(r.tax)}</td><td>${r.product === 'PER' ? fmt.format(r.taxSaving) : '—'}</td><td><strong>${fmt.format(r.netCapital)}</strong></td><td>${fmt.format(r.realEffort)}</td><td>${fmt.format(r.netGain)}</td></tr>`).join('');
 
         $('detail-title').textContent = `${selected.product} · ${selected.bank}`;
         const exitDescription = selected.product === 'PER'
-          ? ` · ${selected.perExitMode === 'home' ? 'achat de la résidence principale' : 'sortie à la retraite'} · taux sur versements ${fmtPct.format(selected.perExitTaxRate)}` : '';
-        $('detail-subtitle').textContent = `${selected.plan} · frais annuels ${fmtPct.format(selected.etfAnnual + selected.wrapperAnnual)}${exitDescription}`;
-        $('detail-fund').innerHTML = `<strong>${selected.etf.name}</strong> · ${selected.etf.kind} · ${selected.etf.isin} · ${fmtPct.format(selected.etfAnnual)} <span class="badge ${selected.etf.verified ? 'ok' : ''}">${selected.etf.status}</span> · <a href="${selected.etf.source}" target="_blank" rel="noreferrer">Ouvrir la fiche officielle ↗</a>`;
+          ? ` · ${selected.perExitMode === 'home' ? 'achat de la résidence principale' : 'sortie à la retraite'} · taux sur versements ${fmtPct.format(selected.perExitTaxRate)}`
+          : selected.product === 'AV' ? ` · ${selected.avOpened ? `ouverture le ${fmtDate.format(selected.avOpened)} · rachat ${selected.avAfterEight ? 'après 8 ans' : 'avant 8 ans'}` : 'ouverture en attente du minimum de 500 €'}` : '';
+        $('detail-subtitle').textContent = `${selected.plan} · frais annuels ${fmtPct.format(selected.etfAnnual + selected.internalAnnual + selected.wrapperAnnual)}${exitDescription}`;
+        $('detail-fund').innerHTML = `<strong>${selected.etf.name}</strong> · ${selected.etf.kind} · ${selected.etf.isin} · ${fmtPct.format(selected.etfAnnual)}${selected.internalAnnual ? ` + ${fmtPct.format(selected.internalAnnual)} de transactions internes estimées/an` : ''} <span class="badge ${selected.etf.verified ? 'ok' : ''}">${selected.etf.status}</span> · <a href="${selected.etf.source}" target="_blank" rel="noreferrer">Ouvrir la fiche officielle ↗</a>${selected.etf.availability ? ` · <a href="${selected.etf.availability}" target="_blank" rel="noreferrer">Catalogue Spirica ↗</a> · <a href="${selected.etf.costsSource}" target="_blank" rel="noreferrer">Détail des frais de l’émetteur ↗</a>` : ''}`;
         const metrics = [
           ['Capital avant impôt', selected.balance + selected.cash + selected.outsideCash], ['Capital net', selected.netCapital], ['Impôt sur le revenu', selected.incomeTax], ['Prélèvements sociaux', selected.socialTax],
           ['Courtage à l’achat', selected.buyFees], ['Courtage à la vente', selected.sellFees], ['Frais ETF / fonds cumulés', selected.etfFees], ['Frais d’enveloppe cumulés', selected.wrapperFees],
           ['Frais de service', selected.serviceFees], ['Droits de garde', selected.custodyFees], ['Total frais financiers', selected.fees], ['Cash non investi', selected.cash + selected.outsideCash]
         ];
+        if (selected.product === 'AV') metrics.push(['Transactions internes ETF cumulées (est.)', selected.internalFees], ['Abattement AV utilisé', selected.avAllowanceUsed]);
         $('detail-grid').innerHTML = metrics.map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${fmtExact.format(value)}</strong></div>`).join('');
-        $('conditional-fees').textContent = `Non appliqués dans ce scénario : transfert PER avant 5 ans (1 % maximum), transfert PEA, téléphone, SRD, change et offre promotionnelle. Non chiffrable à l’avance : spread acheteur-vendeur et coûts de transaction internes estimés du DIC. Frais d’entrée, versement, arbitrage et tenue de compte : 0 € sur les offres modélisées.`;
+        $('conditional-fees').textContent = selected.product === 'AV'
+          ? 'ETF : 0,06 % à l’achat et à la vente. Le cash non rémunéré attend 500 € pour ouvrir le contrat, puis 100 € par versement. Fiscalité AV distincte de la TMI retraite : PS 17,2 %, IR forfaitaire avant/après 8 ans et un seul abattement à la sortie totale. Transactions internes estimées incluses ci-dessus. Hors barème, succession, garanties décès payantes et spread.'
+          : 'Non appliqués dans ce scénario : transfert PER avant 5 ans (1 % maximum), transfert PEA, téléphone, SRD, change et offre promotionnelle. Non chiffrable à l’avance : spread acheteur-vendeur et coûts de transaction internes estimés du DIC. Frais d’entrée, versement, arbitrage et tenue de compte : 0 € sur les offres modélisées.';
         const pc = $('per-comparison');
         if (selected.product === 'PER') {
           const alt = state.altPerResults[selected.bankKey];
@@ -947,7 +997,7 @@
       initOfferFilters();
       setDefaultDate();
       calculate();
-      window.EpargneCalculator = Object.freeze({ TAX, BANKS, ETFS, brokerage, monthlyDates, simulate, annualCheckpoints, runSelfTests });
+      window.EpargneCalculator = Object.freeze({ TAX, BANKS, ETFS, VARIANTS, brokerage, monthlyDates, simulate, taxAV, annualCheckpoints, runSelfTests });
     })();
   </script>
 </body>

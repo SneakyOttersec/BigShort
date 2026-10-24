@@ -2,7 +2,7 @@
 
 Deux simulateurs statiques, sans dépendances ni collecte de données :
 
-- `index.html` : PER, PEA et CTO.
+- `index.html` : PER, PEA, assurance-vie Linxea Spirit 2 et CTO.
 - `enfant.html` : assurance-vie et CTO ouverts au nom d’un enfant mineur.
 
 Le second module distingue expressément la détention par l’enfant de la donation ultérieure des titres d’un CTO parental. Cette donation est expliquée, pas intégrée au classement. Les frais, sources, limites d’éligibilité et hypothèses fiscales sont affichés dans l’interface.
