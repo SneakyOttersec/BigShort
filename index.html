@@ -322,28 +322,6 @@
       </div>
     </section>
 
-    <section class="chart-section card" aria-labelledby="history-title">
-      <h2 id="history-title">Évolution du capital net année par année</h2>
-      <div class="history-toolbar">
-        <div class="segmented" role="group" aria-label="Mesure du graphique annuel">
-          <button type="button" data-history-view="capital" aria-pressed="true">Capital net</button>
-          <button type="button" data-history-view="gap" aria-pressed="false">Écarts entre offres</button>
-        </div>
-        <label><span>Période affichée</span><select id="history-window"><option value="0">Toute la durée</option><option value="5" selected>5 dernières années — zoom</option><option value="10">10 dernières années</option></select></label>
-      </div>
-      <p id="history-view-note" class="history-description"></p>
-      <p id="history-empty" class="empty-message" hidden></p>
-      <div id="history-plot" class="history-plot"></div>
-      <div id="history-inspector" class="history-inspector">
-        <label for="history-year"><span>Année à consulter</span><strong id="history-date"></strong></label>
-        <input id="history-year" type="range" min="0" max="1" step="1" value="1">
-      </div>
-      <div class="history-legend-head"><p class="history-description">Cliquez sur une offre pour masquer ou réafficher sa courbe. Le tableau conserve sa sélection.</p><button type="button" id="history-reset">Afficher toutes les courbes</button></div>
-      <div id="history-values" class="history-values" role="group" aria-label="Afficher ou masquer les courbes du graphique"></div>
-      <p id="history-overlap" class="history-description" hidden>Des offres ont des montants identiques sur cette période : leurs courbes se superposent.</p>
-      <p class="fee-note">Capital net théorique après frais et fiscalité, avec la TMI de sortie retenue pour le PER. La disponibilité du PER avant la retraite reste soumise aux conditions de déblocage.</p>
-    </section>
-
     <section class="chart-section card" aria-labelledby="chart-title">
       <h2 id="chart-title">Capital net à la sortie</h2>
       <p id="comparison-empty" class="empty-message" hidden></p>
@@ -356,6 +334,30 @@
       <div id="detail-grid" class="detail-grid"></div>
       <p id="conditional-fees" class="fee-note"></p>
       <div id="per-comparison" class="per-comparison" hidden></div>
+    </section>
+
+    <section class="chart-section card" aria-labelledby="history-title">
+      <h2 id="history-title">Évolution du capital net année par année</h2>
+      <div class="history-toolbar">
+        <div class="segmented" role="group" aria-label="Mesure du graphique annuel">
+          <button type="button" data-history-view="capital" aria-pressed="true">Capital net</button>
+          <button type="button" data-history-view="gap" aria-pressed="false">Écarts entre offres</button>
+        </div>
+        <label><span>Période affichée</span><select id="history-window"><option value="0">Toute la durée</option><option value="5" selected>5 dernières années — zoom</option><option value="10">10 dernières années</option></select></label>
+        <label><span>Échelle verticale</span><select id="history-scale"><option value="auto" selected>Automatique — ajustée</option><option value="zero">À partir de 0 €</option></select></label>
+      </div>
+      <p id="history-view-note" class="history-description"></p>
+      <p id="history-empty" class="empty-message" hidden></p>
+      <div id="history-plot" class="history-plot"></div>
+      <div id="history-inspector" class="history-inspector">
+        <label for="history-year"><span>Année à consulter</span><strong id="history-date"></strong></label>
+        <input id="history-year" type="range" min="0" max="1" step="1" value="1">
+      </div>
+      <p id="history-selection-note" class="summary-meta" aria-live="polite"></p>
+      <div class="history-legend-head"><p class="history-description">Cliquez sur une offre pour masquer ou réafficher sa courbe. Le tableau conserve sa sélection.</p><div class="selection-actions"><button type="button" id="history-best" aria-pressed="true">Meilleurs PEA / PER</button><button type="button" id="history-reset">Afficher toutes les courbes</button></div></div>
+      <div id="history-values" class="history-values" role="group" aria-label="Afficher ou masquer les courbes du graphique"></div>
+      <p id="history-overlap" class="history-description" hidden>Des offres ont des montants identiques sur cette période : leurs courbes se superposent.</p>
+      <p class="fee-note">Capital net théorique après frais et fiscalité, avec la TMI de sortie retenue pour le PER. La disponibilité du PER avant la retraite reste soumise aux conditions de déblocage.</p>
     </section>
 
     <footer>
@@ -393,13 +395,12 @@
         { bankKey: 'ca', product: 'PEA' },
         { bankKey: 'linxea', product: 'PER' }, { bankKey: 'lucya', product: 'PER' }
       ]);
-      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null, historyHidden: new Set(), historyView: 'capital', historyWindow: 5 };
+      const state = { taxMode: 'reinvest', sort: 'netCapital', direction: -1, selected: 'PER-bourso', results: [], altPerResults: {}, visible: new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`)), history: null, historyIndex: null, historyHidden: new Set(), historyAutoBest: true, historyView: 'capital', historyWindow: 5, historyScale: 'auto' };
       const $ = id => document.getElementById(id);
       const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
       const fmtExact = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtPct = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-      const fmtAxis = new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
       const seriesColors = { 'PER-bourso': '#cc2a41', 'PER-fortuneo': '#b25625', 'PER-linxea': '#8b4278', 'PER-lucya': '#3e6fa8', 'PEA-bourso': '#567c77', 'PEA-fortuneo': '#346b98', 'PEA-ca': '#327058', 'CTO-bourso': '#6d648b', 'CTO-fortuneo': '#956b0d' };
       const bankDashes = { bourso: '', fortuneo: '8 4', ca: '2 4', linxea: '12 3 2 3', lucya: '3 3 10 3' };
 
@@ -445,15 +446,45 @@
         return { checkpoints, series };
       }
 
+      function selectBestHistoryOffers() {
+        const bestKeys = ['PEA', 'PER'].map(product => state.results
+          .filter(r => r.product === product && state.visible.has(r.key))
+          .sort((a, b) => b.netCapital - a.netCapital)[0]?.key).filter(Boolean);
+        state.historyHidden = new Set(VARIANTS.map(v => `${v.product}-${v.bankKey}`).filter(key => !bestKeys.includes(key)));
+      }
+
+      function niceStep(value) {
+        const power = Math.pow(10, Math.floor(Math.log10(Math.max(value, 1e-9))));
+        const fraction = value / power;
+        return (fraction < 1.5 ? 1 : fraction < 2.25 ? 2 : fraction < 3.5 ? 2.5 : fraction < 7.5 ? 5 : 10) * power;
+      }
+
+      function chartScale(min, max, startAtZero) {
+        const span = Math.max(max - min, Math.abs(max) * .01, 1);
+        const low = startAtZero ? 0 : Math.max(0, min - span * .08);
+        const high = Math.max(1, max + span * .08);
+        const step = niceStep((high - low) / 4);
+        const floor = startAtZero ? 0 : Math.max(0, Math.floor(low / step) * step);
+        const ceiling = Math.max(floor + step, Math.ceil(high / step) * step);
+        const decimals = Math.max(0, -Math.floor(Math.log10(step)) + 1);
+        const ticks = Array.from({length: Math.round((ceiling - floor) / step) + 1}, (_, i) => Number((floor + i * step).toFixed(decimals)));
+        return { floor, ceiling, step, ticks };
+      }
+
       function renderHistory() {
+        if (state.historyAutoBest) selectBestHistoryOffers();
         const candidates = state.results.filter(r => state.visible.has(r.key));
         const rows = candidates.filter(r => !state.historyHidden.has(r.key));
         const gapView = state.historyView === 'gap';
         const empty = !state.history || !rows.length;
+        $('history-best').setAttribute('aria-pressed', String(state.historyAutoBest));
+        $('history-selection-note').textContent = state.historyAutoBest
+          ? 'Sélection automatique : meilleur PEA et meilleur PER par capital net à la sortie. En cas d’égalité, une seule offre est retenue.'
+          : `Sélection personnalisée : ${rows.length} courbe${rows.length > 1 ? 's' : ''} affichée${rows.length > 1 ? 's' : ''}.`;
         document.querySelectorAll('[data-history-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.historyView === state.historyView)));
         $('history-view-note').textContent = gapView
           ? 'Retard en euros sur la meilleure offre visible à chaque date. Une valeur de 0 € correspond à l’offre en tête.'
-          : 'Capital net en euros. L’échelle verticale s’ajuste à la période affichée pour distinguer les offres proches.';
+          : state.historyScale === 'zero' ? 'Capital net en euros. L’échelle verticale commence à zéro.' : 'Capital net en euros. Échelle ajustée à la période affichée, avec graduations arrondies ; elle ne commence pas nécessairement à zéro.';
         document.querySelectorAll('[data-history-toggle]').forEach(button => {
           const result = candidates.find(r => r.key === button.dataset.historyToggle);
           const active = !!result && !state.historyHidden.has(result.key);
@@ -479,27 +510,35 @@
         const bestAtDate = checkpoints.map((_, i) => Math.max(...rows.map(r => series[r.key][i])));
         const values = Object.fromEntries(rows.map(r => [r.key, series[r.key].map((value, i) => gapView ? bestAtDate[i] - value : value)]));
         const width = $('history-plot').clientWidth || 300, height = $('history-plot').clientHeight || 460;
-        const left = 76, right = width - 18, top = 38, bottom = height - 40;
         const plottedValues = rows.flatMap(r => values[r.key].slice(firstIndex));
         const max = Math.max(...plottedValues), min = gapView ? 0 : Math.min(...plottedValues);
-        const span = Math.max(max - min, max * .005, 1);
-        const floor = gapView ? 0 : Math.max(0, min - span * .1);
-        const ceiling = Math.max(max + span * .12, gapView ? 1 : 0);
-        const x = point => left + (point.years - visiblePoints[0].years) / (checkpoints.at(-1).years - visiblePoints[0].years) * (right - left);
+        const { floor, ceiling, step, ticks: yTicks } = chartScale(min, max, gapView || state.historyScale === 'zero');
+        const unit = ceiling >= 1e9 ? 1e9 : ceiling >= 1e6 ? 1e6 : ceiling >= 1e3 ? 1e3 : 1;
+        const precision = Math.min(8, Math.max(0, Math.ceil(-Math.log10(step / unit))) + 1);
+        const axisFormatter = new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: precision });
+        const axisLabels = yTicks.map(value => `${axisFormatter.format(value)} €`);
+        const left = Math.max(68, Math.max(...axisLabels.map(label => label.length)) * 7.3 + 14), right = width - 18, top = 38, bottom = height - 40;
+        const xYear = years => left + (years - visiblePoints[0].years) / (checkpoints.at(-1).years - visiblePoints[0].years) * (right - left);
+        const x = point => xYear(point.years);
         const y = value => bottom - (value - floor) / (ceiling - floor) * (bottom - top);
-        const tickCount = Math.max(1, Math.min(6, Math.floor((right - left) / 110), visiblePoints.length - 1));
-        const ticks = [...new Set(Array.from({length: tickCount + 1}, (_, i) => firstIndex + Math.round(i * (visiblePoints.length - 1) / tickCount)))];
-        const grid = Array.from({length: 5}, (_, i) => {
-          const value = floor + (ceiling - floor) * i / 4, py = y(value);
-          const label = ceiling - floor < 10 ? value.toLocaleString('fr-FR', {maximumFractionDigits: 2}) : fmtAxis.format(value);
-          return `<line x1="${left}" y1="${py}" x2="${right}" y2="${py}" stroke="var(--line)" /><text x="${left - 8}" y="${py + 4}" text-anchor="end">${label} €</text>`;
+        const yearSpan = checkpoints.at(-1).years - visiblePoints[0].years;
+        const tickCount = Math.max(1, Math.min(6, Math.floor((right - left) / 110)));
+        const yearStep = Math.max(1, niceStep(yearSpan / tickCount));
+        const ticks = [visiblePoints[0].years];
+        for (let year = Math.ceil(visiblePoints[0].years / yearStep) * yearStep; year < checkpoints.at(-1).years; year += yearStep) {
+          if (xYear(year) - xYear(ticks.at(-1)) >= 100 && xYear(checkpoints.at(-1).years) - xYear(year) >= 100) ticks.push(year);
+        }
+        ticks.push(checkpoints.at(-1).years);
+        const grid = yTicks.map((value, i) => {
+          const py = y(value);
+          return `<line x1="${left}" y1="${py}" x2="${right}" y2="${py}" stroke="var(--line)" /><text data-y-tick="${value}" x="${left - 8}" y="${py + 4}" text-anchor="end">${axisLabels[i]}</text>`;
         }).join('');
-        const axis = ticks.map(i => `<text x="${x(checkpoints[i])}" y="${bottom + 24}" text-anchor="${i === firstIndex ? 'start' : i === checkpoints.length - 1 ? 'end' : 'middle'}">${checkpoints[i].years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${checkpoints[i].years <= 1 ? 'an' : 'ans'}</text>`).join('');
+        const axis = ticks.map((years, i) => `<text data-x-tick="${years}" x="${xYear(years)}" y="${bottom + 24}" text-anchor="${i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle'}">${yearSpan < 1 ? i === 0 ? 'Départ' : 'Sortie' : `${years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ${years <= 1 ? 'an' : 'ans'}`}</text>`).join('');
         const lines = rows.map(r => `<path data-series-key="${r.key}" d="${values[r.key].slice(firstIndex).map((value, i) => `${i ? 'L' : 'M'}${x(visiblePoints[i]).toFixed(2)},${y(value).toFixed(2)}`).join(' ')}" fill="none" stroke="${seriesColors[r.key]}" stroke-width="2.5" stroke-dasharray="${bankDashes[r.bankKey]}"><title>${r.product} · ${r.bank}</title></path>`).join('');
         const cursor = `<line x1="${x(checkpoints[index])}" y1="${top}" x2="${x(checkpoints[index])}" y2="${bottom}" stroke="var(--muted)" opacity=".5" />`;
         const dots = rows.map(r => `<circle cx="${x(checkpoints[index])}" cy="${y(values[r.key][index])}" r="4" fill="${seriesColors[r.key]}"><title>${r.product} · ${r.bank} : ${fmt.format(values[r.key][index])}</title></circle>`).join('');
         const measureLabel = gapView ? 'Écart au meilleur (€)' : 'Capital net (€)';
-        $('history-plot').innerHTML = `<svg viewBox="0 0 ${width} ${height}" data-view="${state.historyView}" data-first-year="${visiblePoints[0].years}" role="img" aria-labelledby="history-svg-title history-svg-desc" style="font:12px var(--font-mono);fill:var(--muted)"><title id="history-svg-title">${measureLabel}</title><desc id="history-svg-desc">${rows.length} courbes visibles. Période : de ${visiblePoints[0].years} à ${checkpoints.at(-1).years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ans. Le curseur Année à consulter donne les valeurs exactes.</desc><text x="${left}" y="16" fill="var(--text)">${measureLabel}</text>${grid}${axis}${lines}${cursor}${dots}</svg>`;
+        $('history-plot').innerHTML = `<svg viewBox="0 0 ${width} ${height}" data-view="${state.historyView}" data-first-year="${visiblePoints[0].years}" data-y-min="${floor}" data-y-max="${ceiling}" data-y-step="${step}" role="img" aria-labelledby="history-svg-title history-svg-desc" style="font:12px var(--font-mono);fill:var(--muted)"><title id="history-svg-title">${measureLabel}</title><desc id="history-svg-desc">${rows.length} courbes visibles. Période : de ${visiblePoints[0].years} à ${checkpoints.at(-1).years.toLocaleString('fr-FR', {maximumFractionDigits: 1})} ans. Le curseur Année à consulter donne les valeurs exactes.</desc><text x="${left}" y="16" fill="var(--text)">${measureLabel}</text>${grid}${axis}${lines}${cursor}${dots}</svg>`;
         $('history-year').min = firstIndex;
         $('history-year').max = checkpoints.length - 1;
         $('history-year').value = index;
@@ -789,12 +828,15 @@
         const button = e.target.closest('[data-history-toggle]');
         if (!button) return;
         const key = button.dataset.historyToggle;
+        state.historyAutoBest = false;
         if (state.historyHidden.has(key)) state.historyHidden.delete(key); else state.historyHidden.add(key);
         renderHistory();
       });
-      $('history-reset').addEventListener('click', () => { state.historyHidden.clear(); renderHistory(); });
+      $('history-reset').addEventListener('click', () => { state.historyAutoBest = false; state.historyHidden.clear(); renderHistory(); });
+      $('history-best').addEventListener('click', () => { state.historyAutoBest = true; renderHistory(); });
       document.querySelectorAll('[data-history-view]').forEach(button => button.addEventListener('click', () => { state.historyView = button.dataset.historyView; renderHistory(); }));
       $('history-window').addEventListener('change', e => { state.historyWindow = Number(e.target.value); renderHistory(); });
+      $('history-scale').addEventListener('change', e => { state.historyScale = e.target.value; renderHistory(); });
       window.addEventListener('resize', renderHistory);
       document.querySelectorAll('[data-tax-mode]').forEach(btn => btn.addEventListener('click', () => {
         state.taxMode = btn.dataset.taxMode;
